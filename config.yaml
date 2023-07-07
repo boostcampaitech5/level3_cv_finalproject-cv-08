@@ -1,0 +1,33 @@
+train_dataset:
+    type: "Video2RollDataset"
+    args:
+        img_root: "./data/ytdataset/images"
+        label_root: "./data/ytdataset/labels_audeo"
+        min_key: 5
+        max_key: 80
+    loader_args:
+        batch_size: 64
+        num_workers: 8
+test_dataset:
+    type: "Video2RollDataset"
+    args:
+        img_root: "./data/ytdataset/images"
+        label_root: "./data/ytdataset/labels_audeo"
+        min_key: 5
+        max_key: 80
+    loader_args:
+        batch_size: 64
+        num_workers: 8
+model:
+    type: "Video2RollNet"
+    args:
+        num_classes: 51
+    load_ckpt: 
+        path: "./Audeo/Audeo_github/Video2Roll_models/Video2RollNet.pth"
+        fc_out: 76 # checkpoint에서 사용한 num_classes를 지정. 모델의 num_classes와 동일하면 null 사용.
+optimizer:
+    type: "Adam"
+    args:
+        lr: 0.001
+device: "cuda:0"
+epochs: 100
