@@ -41,13 +41,12 @@ class Video2Roll_Trainer(object):
             # evaluate
             print("Validating...")
             self.net.eval()
-            val_avg_loss, val_avg_precision, val_avg_recall, val_avg_acc, val_fscore = self.validate()
+            val_avg_loss, val_avg_precision, val_avg_recall, val_avg_acc, val_fscore, val_precision_re, val_recall_re, val_f1_re = self.validate()
             print('-' * 85)
             print('Train Summary | Epoch {0} | Time {1:.2f}s | '
                   'Train Loss {2:.3f}'.format(
                 epoch+1, time.time() - start, tr_avg_loss, tr_avg_precision, tr_avg_recall))
-            print("epoch {0} validation loss:{1:.3f} | avg precision:{2:.3f} | avg recall:{3:.3f} | avg acc:{4:.3f} | f1 score:{5:.3f}".format(
-                epoch+1, val_avg_loss, val_avg_precision, val_avg_recall, val_avg_acc, val_fscore))
+            print(f"epoch {epoch+1} validation loss:{val_avg_loss} | avg precision:{val_avg_precision} | avg recall:{val_avg_recall} | avg acc:{val_avg_acc} | f1 score:{val_fscore} | avg precision(re):{val_precision_re} | avg recall(re):{val_recall_re} | f1 score(re):{val_f1_re}")
             print('-' * 85)
             wandb.log({
                 "train_loss": tr_avg_loss, 
@@ -57,7 +56,10 @@ class Video2Roll_Trainer(object):
                 "val_precision": val_avg_precision,
                 "val_recall": val_avg_recall,
                 "val_accuracy": val_avg_acc,
-                "val_f1": val_fscore})
+                "val_f1": val_fscore,
+                "val_precision(re)": val_precision_re,
+                "val_recall(re)": val_recall_re,
+                "val_f1(re)": val_f1_re})
 
             # if val_avg_loss < pre_val_loss:
             #     pre_val_loss = val_avg_loss
@@ -139,7 +141,16 @@ class Video2Roll_Trainer(object):
         all_precision = metrics.precision_score(all_label, all_pred_label, average='samples', zero_division=1)
         all_recall = metrics.recall_score(all_label, all_pred_label, average='samples', zero_division=1)
         all_f1_score = metrics.f1_score(all_label, all_pred_label, average='samples', zero_division=1)
-        return epoch_loss/count, all_precision, all_recall, accuracy, all_f1_score
+        
+        precision_re = metrics.precision_score(all_label, all_pred_label, average=None, zero_division=np.nan)
+        recall_re = metrics.recall_score(all_label, all_pred_label, average=None, zero_division=np.nan)
+        f1_score_re = metrics.f1_score(all_label, all_pred_label, average=None, zero_division=np.nan)
+        
+        precision_re = np.nansum(precision_re) / np.count_nonzero(~np.isnan(precision_re)),
+        recall_re = np.nansum(recall_re) / np.count_nonzero(~np.isnan(recall_re)),
+        f1_score_re = np.nansum(f1_score_re) / np.count_nonzero(~np.isnan(f1_score_re))
+        
+        return epoch_loss/count, all_precision, all_recall, accuracy, all_f1_score, precision_re[0], recall_re[0], f1_score_re
 
 
 def _prf_divide(numerator, denominator, zero_division="warn"):
