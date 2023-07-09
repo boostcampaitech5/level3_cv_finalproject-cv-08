@@ -17,6 +17,8 @@ import dataset
 import model
 from easydict import EasyDict
 
+import wandb
+
 
 from utils.util import get_current_time, load_config, validate_config
 
@@ -24,12 +26,20 @@ def main(cfg):
     save_model_path = "./experiments"
     expr_count = len(os.listdir(save_model_path))
     now = get_current_time()
-    save_model_path = os.path.join(save_model_path, f"{expr_count+1}_{now}")
+    save_model_path = os.path.join(save_model_path, f"{expr_count+1}_{now}_{cfg['wandb']['run_name']}")
     os.makedirs(save_model_path, exist_ok=True)
     with open(os.path.join(save_model_path, "config.yaml"), "w") as f:
         yaml.dump(cfg, f)
         
     cfg = EasyDict(cfg)
+    
+    if cfg.wandb.use:
+        wandb.init(
+            entity="lijm1358",
+            project="vmt",
+            name=cfg.wandb.run_name,
+            config=cfg
+        )
     
     train_dataset = getattr(dataset, cfg.train_dataset.type)(**cfg.test_dataset.args, subset="train")
     train_sampler = MultilabelBalancedRandomSampler(train_dataset.train_labels)

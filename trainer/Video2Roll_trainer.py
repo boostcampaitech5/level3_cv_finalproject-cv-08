@@ -5,6 +5,7 @@ from sklearn import metrics
 from sklearn.metrics import _classification
 from tqdm import tqdm
 import os
+import wandb
 
 class Video2Roll_Trainer(object):
     def __init__(self, data_loader, test_data_loader, model, criterion, optimizer, lr_scheduler, epochs, save_model_path, device):
@@ -48,6 +49,15 @@ class Video2Roll_Trainer(object):
             print("epoch {0} validation loss:{1:.3f} | avg precision:{2:.3f} | avg recall:{3:.3f} | avg acc:{4:.3f} | f1 score:{5:.3f}".format(
                 epoch+1, val_avg_loss, val_avg_precision, val_avg_recall, val_avg_acc, val_fscore))
             print('-' * 85)
+            wandb.log({
+                "train_loss": tr_avg_loss, 
+                "train_precision": tr_avg_precision, 
+                "train_recall": tr_avg_recall,
+                "val_loss": val_avg_loss,
+                "val_precision": val_avg_precision,
+                "val_recall": val_avg_recall,
+                "val_accuracy": val_avg_acc,
+                "val_f1": val_fscore})
 
             # if val_avg_loss < pre_val_loss:
             #     pre_val_loss = val_avg_loss
