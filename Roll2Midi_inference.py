@@ -11,7 +11,7 @@ cuda = torch.device("cuda")
 print(torch.cuda.current_device())
 Tensor = torch.cuda.FloatTensor
 class Midi_Generation():
-    def __init__(self, checkpoint, exp_dir, est_roll_folder, video_name):
+    def __init__(self, checkpoint, exp_dir, est_roll_folder, video_name, infer_out_dir):
         # model dir
         self.exp_dir = exp_dir
         # load model checkpoint
@@ -21,7 +21,7 @@ class Midi_Generation():
         # the Roll prediction folder
         self.est_roll_folder = est_roll_folder + video_name
         # Midi output dir
-        self.infer_out_dir = './outputs_test/r2m_output/'
+        self.infer_out_dir = infer_out_dir
 
         self.min_key = 0
         self.max_key = 84
@@ -87,12 +87,15 @@ class Midi_Generation():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--video_name", type=str, required=True)
+    parser.add_argument("--video_name", type=str)
+    parser.add_argument("--roll_path", type=str, default='./outputs_test/v2r_output/', help="default='./outputs_test/v2r_output/'")
+    parser.add_argument("--output_path", type=str, default='./outputs_test/r2m_output/', help="default='./outputs_test/r2m_output/'")
+    parser.add_argument("--iter", action="store_true")
 
     args = parser.parse_args()
 
     # example for generating the Midi output from training Roll predictions
-    est_roll_folder = './outputs_test/v2r_output/'
+    est_roll_folder = args.roll_path
     exp_dir = os.path.abspath('./Audeo/Audeo_github/Roll2Midi_models/Roll2Midi_model')
     with open(os.path.join(exp_dir,'hyperparams.json'), 'r') as hpfile:
         hp = json.load(hpfile)
@@ -100,7 +103,13 @@ if __name__ == "__main__":
     print("the best epoch:", hp['best_epoch'])
 
     checkpoints = 'checkpoint-{}.tar'.format(hp['best_epoch'])
-    video_name = args.video_name
-    generator = Midi_Generation(checkpoints, exp_dir, est_roll_folder, video_name)
-    generator.inference()
+    
+    if args.iter:
+        for video_name in os.listdir(est_roll_folder):
+            generator = Midi_Generation(checkpoints, exp_dir, est_roll_folder, video_name, args.output_path)
+            generator.inference()
+    else:
+        video_name = args.video_name
+        generator = Midi_Generation(checkpoints, exp_dir, est_roll_folder, video_name, args.output_path)
+        generator.inference()
 

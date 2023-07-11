@@ -157,13 +157,24 @@ class MIDISynth():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--video_name", type=str, required=True)
+    parser.add_argument("--video_name", type=str)
+    parser.add_argument("--midi_path", type=str, default='./outputs_test/r2m_output/', help="default='./outputs_test/r2m_output/'")
+    parser.add_argument("--iter", action="store_true")
+    
     args = parser.parse_args()
+    
     # could select any instrument available in Midi
     instrument = 'Acoustic Grand Piano'
-    video_name = args.video_name
-    Midi_out_folder = './outputs_test/r2m_output/'# Generated Midi output folder, change to your own path
-    Synth = MIDISynth(Midi_out_folder, video_name, instrument, midi=True)
-    Synth.GetNote()
-    Synth.Synthesize()
+    
+    Midi_out_folder = args.midi_path# Generated Midi output folder, change to your own path
+    if args.iter:
+        for video_name in os.listdir(Midi_out_folder):
+            Synth = MIDISynth(Midi_out_folder, video_name, instrument, midi=True)
+            Synth.GetNote()
+            Synth.Synthesize()
+    else:
+        video_name = args.video_name
+        Synth = MIDISynth(Midi_out_folder, video_name, instrument, midi=True)
+        Synth.GetNote()
+        Synth.Synthesize()
 
