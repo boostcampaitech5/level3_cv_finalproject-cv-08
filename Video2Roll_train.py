@@ -41,11 +41,15 @@ def main(cfg):
             config=cfg
         )
     
-    train_dataset = getattr(dataset, cfg.train_dataset.type)(**cfg.test_dataset.args, subset="train")
+    train_dataset = getattr(dataset, cfg.train_dataset.type)(**cfg.train_dataset.args, subset="train")
     train_sampler = MultilabelBalancedRandomSampler(train_dataset.train_labels)
     train_data_loader = DataLoader(train_dataset, **cfg.train_dataset.loader_args, sampler=train_sampler)
-    test_dataset = getattr(dataset, cfg.test_dataset.type)(**cfg.test_dataset.args, subset="test")
-    test_data_loader = DataLoader(test_dataset, **cfg.test_dataset.loader_args)
+    # train_data_loader = DataLoader(train_dataset, **cfg.train_dataset.loader_args)
+    
+    test_data_loader = []
+    for test_ds in cfg.test_dataset:
+        test_dataset = getattr(dataset, test_ds.type)(**test_ds.args, subset="test")
+        test_data_loader.append(DataLoader(test_dataset, **test_ds.loader_args))
     device = cfg.device
 
     net = getattr(model, cfg.model.type)(**cfg.model.args)
