@@ -204,5 +204,6 @@ data/
 Audeo/
 outputs_test/
 experiments/
-
-
+wandb/
+keyboard_det/
+experiment.ipynb
