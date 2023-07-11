@@ -1,1 +1,1 @@
-from .Video2RollNet import Video2RollNet
+from .Video2RollNet import Video2RollNet, Video2RollNet_resnet50
