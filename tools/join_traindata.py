@@ -4,8 +4,8 @@ import os
 def main(args):
     for path in args.data_paths:
         for filename in os.listdir(path):
-            link_target = os.path.join(args.target_path, filename)
-            link_original = os.path.join(path, filename)
+            link_target = os.path.abspath(os.path.join(args.target_path, filename))
+            link_original = os.path.abspath(os.path.join(path, filename))
             os.system(f'ln -s "{link_original}" "{link_target}"')
         
     
