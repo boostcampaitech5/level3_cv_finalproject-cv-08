@@ -14,7 +14,13 @@ pygame = "^2.5.0"
 mido = "^1.2.10"
 opencv-python = "^4.8.0.74"
 torch = {url="https://download.pytorch.org/whl/cu110/torch-1.7.0%2Bcu110-cp38-cp38-linux_x86_64.whl"}
-torchvision = {url="https://download.pytorch.org/whl/cu110/torchvision-0.8.0-cp38-cp38-linux_x86_64.whl"}
+torchvision = {url="https://download.pytorch.org/whl/cu110/torchvision-0.8.1%2Bcu110-cp38-cp38-linux_x86_64.whl"}
+pafy = "^0.5.5"
+validators = "^0.20.0"
+youtube-dl = "^2021.12.17"
+ultralytics = "^8.0.132"
+librosa = "^0.10.0.post2"
+pretty-midi = "^0.2.10"
 
 [build-system]
 requires = ["poetry-core"]
