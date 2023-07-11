@@ -9,8 +9,6 @@ import soundfile as sf
 class MIDISynth():
     def __init__(self, roll, frame):
         self.frame = frame
-        self.min_key = 15
-        self.max_key = 65
         self.piano_keys = 88
         self.spf = 0.04 # second per frame
         self.sample_rate = 16000
@@ -66,7 +64,7 @@ class MIDISynth():
             if len(start)!=len(end):
                 end = np.append(end, tmp.shape)
             merged_list = [(start[i], end[i]) for i in range(0, len(start))]
-            self.wo_Roll2Midi_notes[21 + i] = merged_list
+            self.wo_Roll2Midi_notes[36 + i] = merged_list
 
     def generate_midi(self):
         notes, ins = self.wo_Roll2Midi_notes, self.ins
