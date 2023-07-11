@@ -60,7 +60,7 @@ def preprocess(model, video):
         # (360, 640, 3)의 size를 가진 video의 (50 second = 1250 frame)을 처리하는 데 거리는 시간 : 27.6594 (너무 오래 걸린다)
         frames = []
         frame_count = 0
-
+        key_detected = False
         while True:
             if frame_count < start: 
                 frame_count += 1
@@ -69,11 +69,17 @@ def preprocess(model, video):
                 ret, frame = cap.read()
 
                 # Piano Detection
-                pred = model.predict(source=frame, device=state.device, verbose=False)
-                if pred:
-                    if pred[0].boxes.conf.item() > 0.8:
-                        xmin, ymin, xmax, ymax = tuple(np.array(pred[0].boxes.xyxy.detach().cpu()[0], dtype=int))
-                        frame = frame[ymin:ymax, xmin:xmax]
+                if not key_detected:
+                    pred = model.predict(source=frame, device=state.device, verbose=False)
+                    if pred[0].boxes:
+                        if pred[0].boxes.conf.item() > 0.8:
+                            xmin, ymin, xmax, ymax = tuple(np.array(pred[0].boxes.xyxy.detach().cpu()[0], dtype=int))
+                            frame = frame[ymin:ymax, xmin:xmax]
+                            key_detected = True
+                    else:
+                        continue
+                else:
+                    frame = frame[ymin:ymax, xmin:xmax]
 
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 frame = Image.fromarray(frame.astype(np.uint8))
