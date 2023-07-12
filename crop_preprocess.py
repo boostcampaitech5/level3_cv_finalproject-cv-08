@@ -11,7 +11,7 @@ def crop_piano(frame: np.ndarray, conf_threshold: float = 0.8):
     output = model.predict(source=frame, device="0")
     xyxy = tuple()
 
-    if output:
+    if output[0].boxes:
         if output[0].boxes.conf.item() > conf_threshold:
             xyxy = tuple(np.array(output[0].boxes.xyxy.detach().cpu()[0], dtype=int))
 
