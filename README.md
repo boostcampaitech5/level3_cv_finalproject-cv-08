@@ -1,5 +1,10 @@
 # :raised_hand: [Boostcamp-AI-Tech-Level3] HiBoostCamp :raised_hand:
 
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
+[![Version](https://img.shields.io/badge/Version-0.1-green.svg?style=flat-square)](#version-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
+
 ## 최종 프로젝트 목표
 피아노 연주영상에서 악보(MIDI)생성
 
@@ -28,10 +33,6 @@
 |CI/CD 프로젝트 관리 (Git Action) 및 시각화 조사|김희상|
 
 ## Contributors?
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
-[![Version](https://img.shields.io/badge/Version-0.1-green.svg?style=flat-square)](#version-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
