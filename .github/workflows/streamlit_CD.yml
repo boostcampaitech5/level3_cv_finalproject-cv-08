@@ -6,7 +6,6 @@ on:
       
 jobs:
   build:
-  
     runs-on: ubuntu-lastest
     steps:
       - name: execute remote ssh commands using ssh key
