@@ -14,8 +14,8 @@ import torch
 import torchvision.transforms as transforms
 
 from ultralytics import YOLO
-import Video2RollNet
-from Roll2Wav import MIDISynth
+from video_to_roll import resnet18
+from roll_to_wav import MIDISynth
 
 import streamlit as st
 from streamlit import session_state as state
@@ -23,13 +23,14 @@ from streamlit import session_state as state
 
 @st.cache_resource
 def video_to_roll_load_model():
-    model_path = "/opt/ml/data/models/Video2RollNet.pth"
+    model_path = "/opt/ml/data/models/video_to_roll.pth"
     
-    model = Video2RollNet.resnet18().to(state.device)
+    model = resnet18().to(state.device)
     model.load_state_dict(torch.load(model_path, map_location=state.device))
     model.eval()
     
     return model
+
 
 @st.cache_resource
 def piano_detection_load_model():
@@ -71,6 +72,8 @@ def preprocess(model, video):
                     if pred[0].boxes.conf.item() > 0.8:
                         xmin, ymin, xmax, ymax = tuple(np.array(pred[0].boxes.xyxy.detach().cpu()[0], dtype=int))
                         frame = frame[ymin:ymax, xmin:xmax]
+                        # check crop region
+                        cv2.imwrite("02.jpg", cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
                         key_detected = True
                 else:
                     continue
@@ -83,9 +86,6 @@ def preprocess(model, video):
 
         frames = np.concatenate(preprocessed_frames)
         
-    preprocess_success_msg = st.success("Data Preprocessed Successfully!")
-    
-    with st.spinner("Data Loading ..."):
         # 5 frame 씩
         frames_with5 = []
         for i in range(len(frames)):
@@ -98,10 +98,9 @@ def preprocess(model, video):
             frames_with5.append(file_list)
     
     frames_with5 = torch.Tensor(np.array(frames_with5)).float().cuda()
-    load_success_msg = st.success("Data Loaded Successfully!")    
     
+    load_success_msg = st.success("Data Preprocessed Successfully!")
     time.sleep(1)
-    preprocess_success_msg.empty()
     load_success_msg.empty()
     
     return frames_with5
@@ -109,20 +108,24 @@ def preprocess(model, video):
 
 def inference(model, frames_with5):    
     min_key, max_key = 15, 65
-    threshold = 0.85
+    threshold = 0.7
 
     with st.spinner("Data Inferencing ..."):
+        batch_size = 32
         preds_roll = []
-        for idx, frame in enumerate(frames_with5):
-            pred_logits = model(torch.unsqueeze(frame, dim=0))
+        for idx in range(0, len(frames_with5), batch_size):
+            batch_frames = torch.stack([frames_with5[i] for i in range(idx, min(len(frames_with5), idx+batch_size))])
+            pred_logits = model(batch_frames)
             pred_roll = torch.sigmoid(pred_logits) >= threshold   
             numpy_pred_roll = pred_roll.cpu().detach().numpy().astype(np.int_)
-            preds_roll.append(numpy_pred_roll)
+            
+            for pred in numpy_pred_roll:
+                preds_roll.append(pred)
 
         preds_roll = np.asarray(preds_roll).squeeze()
         if preds_roll.shape[0] != state.frame_range:
             temp = np.zeros((state.frame_range, max_key-min_key+1))
-            temp[:preds_roll.shape[0], :] = preds_roll
+            temp[:preds_roll.shape[0], :] = preds_roll[:state.frame_range, :]
             preds_roll = temp
 
         roll = np.zeros((state.frame_range, 88))
@@ -172,15 +175,13 @@ if __name__ == "__main__":
     video_to_roll_model = video_to_roll_load_model()
     piano_detection_model = piano_detection_load_model()
     
-    # cv2
-    # preprocess time : 68.92283010482788
-    # inference time : 10.378642082214355
+    # 720p - batch 1
+    # preprocess 16.203667163848877
+    # inference 9.792465209960938
     
-    # ffmpeg
-    # download time : 1~3
-    # preprocess time : 24.259491682052612
-    # inference time : 10.184748649597168
-    
+    # 720p - batch 32
+    # preprocess 15.507080078125
+    # inference 2.504195213317871
     with state.tab_url:
         # https://youtu.be/_3qnL9ddHuw
         state.input_url = st.text_input(label="URL", placeholder="📂 Input youtube url here (ex. https://youtu.be/...)")
@@ -190,18 +191,20 @@ if __name__ == "__main__":
                 try:
                     with st.spinner("Url Analyzing ..."):
                         yt = YouTube(state.input_url)
-                        yt.streams.filter(file_extension="mp4").order_by("resolution").desc().first().download(output_path="./video", filename="01.mp4")
+                        yt.streams.filter(file_extension="mp4", res="720p").order_by("resolution").desc().first().download(output_path="./video", filename="01.mp4")
                 except:
                     st.error("Please input Youtube url !")
                 else:
                     probe = ffmpeg.probe("./video/01.mp4")
                     video = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)      
+                    
                     state.video_fps = int(math.ceil(int(video['r_frame_rate'].split('/')[0]) / int(video['r_frame_rate'].split('/')[1])))
                     state.video_range = st.slider(label="Select video range (second)", min_value=0, max_value=int(float(video['duration'])), step=10, value=(50, 100))
                     state.frame_range = state.video_range[1] * state.video_fps - state.video_range[0] * state.video_fps
                     
                     url_submit = st.button(label="Submit", key="url_submit")
                     if url_submit:
+                        s_t = time.time()
                         frames_with5 = preprocess(piano_detection_model, video)
                         inference(video_to_roll_model, frames_with5)
                         os.remove("./video/01.mp4")
