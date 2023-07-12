@@ -1,7 +1,5 @@
 # :raised_hand: [Boostcamp-AI-Tech-Level3] HiBoostCamp :raised_hand:
 
-# :notes:
-
 ## 최종 프로젝트 목표
 피아노 연주영상에서 악보(MIDI)생성
 
