@@ -1,5 +1,7 @@
 # :raised_hand: [Boostcamp-AI-Tech-Level3] HiBoostCamp :raised_hand:
 
+:notes:
+
 ## 최종 프로젝트 목표
 피아노 연주영상에서 악보(MIDI)생성
 
@@ -10,8 +12,8 @@
   입력 피아노 영상에서 생성한 Midi 파일을 사용하여 다른 악기로 연주한 버전 생성
 
 ## Baseline 모델
-- Su, Kun, Xiulong Liu, and Eli Shlizerman. "Audeo: Audio generation for a silent performance video." Advances in Neural Information Processing Systems 33 (2020): 3325-3337.
-- Gan, Chuang, et al. "Foley music: Learning to generate music from videos." Computer Vision–ECCV 2020: 16th European Conference, Glasgow, UK, August 23–28, 2020, Proceedings, Part XI 16. Springer International Publishing, 2020.
+- _Su, Kun, Xiulong Liu, and Eli Shlizerman. "Audeo: Audio generation for a silent performance video." Advances in Neural Information Processing Systems 33 (2020): 3325-3337._
+- _Gan, Chuang, et al. "Foley music: Learning to generate music from videos." Computer Vision–ECCV 2020: 16th European Conference, Glasgow, UK, August 23–28, 2020, Proceedings, Part XI 16. Springer International Publishing, 2020._
 
 ## 사용 중인 데이터 셋
 - <a href="http://data.csail.mit.edu/clevrer/data_pose_midi.tar">Foley Music 논문에서 사용한 데이터셋</a>
