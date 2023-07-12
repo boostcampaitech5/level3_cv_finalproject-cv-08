@@ -1,8 +1,9 @@
-name: streamlit CD action
+name: "streamlit CD action"
 on:
   push:
-    branches: [ "khs/streamlit" ]
-    
+    branches:
+      - 'khs/streamlit'
+      
 jobs:
   build:
   
