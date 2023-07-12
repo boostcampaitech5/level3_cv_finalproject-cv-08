@@ -42,12 +42,6 @@ def piano_detection_load_model():
 
 
 def preprocess(model, video):
-    transform = transforms.Compose([
-        lambda x: x.resize((900, 100)),
-        lambda x: np.reshape(x,(100, 900, 1)),
-        lambda x: np.transpose(x,[2, 0, 1]),
-        lambda x: x/255.])
-    
     with st.spinner("Data Preprocessing ..."):        
         out, _ = (
             ffmpeg
@@ -64,28 +58,25 @@ def preprocess(model, video):
         
         preprocessed_frames = []
         key_detected = False
-        for frame in frames:
+        for i, frame in enumerate(frames):
             # Piano Detection
             if not key_detected:
-                pred = model.predict(source=frame, device=state.device, verbose=False)
+                pred = model.predict(source=frame, device='0', verbose=False)
                 if pred[0].boxes:
                     if pred[0].boxes.conf.item() > 0.8:
                         xmin, ymin, xmax, ymax = tuple(np.array(pred[0].boxes.xyxy.detach().cpu()[0], dtype=int))
-                        frame = frame[ymin:ymax, xmin:xmax]
-                        # check crop region
-                        cv2.imwrite("02.jpg", cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
+                        cv2.imwrite("02.jpg", cv2.cvtColor(frame[ymin:ymax, xmin:xmax], cv2.COLOR_BGR2GRAY))
+                        start_idx = i
                         key_detected = True
-                else:
-                    continue
-            else:
-                frame = frame[ymin:ymax, xmin:xmax]
-            
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            frame = Image.fromarray(frame.astype(np.uint8))
-            preprocessed_frames.append(transform(frame))
-
-        frames = np.concatenate(preprocessed_frames)
+                        break
         
+        if key_detected:
+            frames = np.mean(frames[start_idx:, ymin:ymax, xmin:xmax, ...], axis=3)
+            frames = np.stack([cv2.resize(f, (900 ,100), interpolation=cv2.INTER_LINEAR) for f in frames], axis=0) / 255.
+        else:
+            # 영상 전체에서 Top View 피아노가 없을 경우 None 반환
+            return None
+            
         # 5 frame 씩
         frames_with5 = []
         for i in range(len(frames)):
@@ -151,6 +142,7 @@ if __name__ == "__main__":
     if "tab_video" not in state: state.tab_video = None
 
     if "input_url" not in state: state.input_url = None
+    if "prev_url" not in state: state.prev_url = None
     if "input_video" not in state: state.input_video = None
 
     if "video_fps" not in state: state.video_fps = None
@@ -189,9 +181,11 @@ if __name__ == "__main__":
         if state.input_url:           
             if validators.url(state.input_url):
                 try:
-                    with st.spinner("Url Analyzing ..."):
-                        yt = YouTube(state.input_url)
-                        yt.streams.filter(file_extension="mp4", res="720p").order_by("resolution").desc().first().download(output_path="./video", filename="01.mp4")
+                    if state.prev_url != state.input_url:
+                        state.prev_url = state.input_url
+                        with st.spinner("Url Analyzing ..."):
+                            yt = YouTube(state.input_url)
+                            yt.streams.filter(file_extension="mp4", res="720p").order_by("resolution").desc().first().download(output_path="./video", filename="01.mp4")
                 except:
                     st.error("Please input Youtube url !")
                 else:
