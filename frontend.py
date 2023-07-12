@@ -2,11 +2,13 @@ import os
 import cv2
 import time
 import pafy
+import math
 import ffmpeg
 import tempfile
 import validators
 import numpy as np
 from PIL import Image
+from pytube import YouTube
 
 import torch
 import torchvision.transforms as transforms
@@ -48,7 +50,7 @@ def preprocess(model, video):
     with st.spinner("Data Preprocessing ..."):        
         out, _ = (
             ffmpeg
-            .input("01.mp4", ss=state.video_range[0], t=state.video_range[1]-state.video_range[0])
+            .input("./video/01.mp4", ss=state.video_range[0], t=state.video_range[1]-state.video_range[0])
             .output('pipe:', format='rawvideo', pix_fmt='rgb24', loglevel="quiet")
             .run(capture_stdout=True)
         )
@@ -107,8 +109,7 @@ def preprocess(model, video):
 
 def inference(model, frames_with5):    
     min_key, max_key = 15, 65
-    output_range = state.video_range[1] * state.video_fps - state.video_range[0] * state.video_fps
-    threshold = 0.4
+    threshold = 0.85
 
     with st.spinner("Data Inferencing ..."):
         preds_roll = []
@@ -117,10 +118,16 @@ def inference(model, frames_with5):
             pred_roll = torch.sigmoid(pred_logits) >= threshold   
             numpy_pred_roll = pred_roll.cpu().detach().numpy().astype(np.int_)
             preds_roll.append(numpy_pred_roll)
-        
-        roll = np.zeros((output_range, 88))
-        roll[:, min_key:max_key+1] = np.asarray(preds_roll).squeeze()
-        wav, pm = MIDISynth(roll, output_range).process_roll()
+
+        preds_roll = np.asarray(preds_roll).squeeze()
+        if preds_roll.shape[0] != state.frame_range:
+            temp = np.zeros((state.frame_range, max_key-min_key+1))
+            temp[:preds_roll.shape[0], :] = preds_roll
+            preds_roll = temp
+
+        roll = np.zeros((state.frame_range, 88))
+        roll[:, min_key:max_key+1] = preds_roll
+        wav, pm = MIDISynth(roll, state.frame_range).process_roll()
 
         st.image(np.rot90(roll, 1), width=700)
         st.audio(wav, sample_rate=16000)
@@ -145,6 +152,7 @@ if __name__ == "__main__":
 
     if "video_fps" not in state: state.video_fps = None
     if "video_range" not in state: state.video_range = None
+    if "frame_range" not in state: state.frame_range = None
     
     st.header("Inference")    
     st.subheader("How to upload ?")
@@ -169,7 +177,7 @@ if __name__ == "__main__":
     # inference time : 10.378642082214355
     
     # ffmpeg
-    # download time : 0.9743609428405762
+    # download time : 1~3
     # preprocess time : 24.259491682052612
     # inference time : 10.184748649597168
     
@@ -181,22 +189,22 @@ if __name__ == "__main__":
             if validators.url(state.input_url):
                 try:
                     with st.spinner("Url Analyzing ..."):
-                        video = pafy.new(state.input_url) 
-                        input_video = video.getbestvideo(preftype="mp4")
-                        input_video.download(filepath="01.mp4", quiet=True)
+                        yt = YouTube(state.input_url)
+                        yt.streams.filter(file_extension="mp4").order_by("resolution").desc().first().download(output_path="./video", filename="01.mp4")
                 except:
                     st.error("Please input Youtube url !")
                 else:
-                    probe = ffmpeg.probe("01.mp4")
-                    video = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
-                    
-                    state.video_fps = int(video['r_frame_rate'].split('/')[0])
+                    probe = ffmpeg.probe("./video/01.mp4")
+                    video = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)      
+                    state.video_fps = int(math.ceil(int(video['r_frame_rate'].split('/')[0]) / int(video['r_frame_rate'].split('/')[1])))
                     state.video_range = st.slider(label="Select video range (second)", min_value=0, max_value=int(float(video['duration'])), step=10, value=(50, 100))
-
+                    state.frame_range = state.video_range[1] * state.video_fps - state.video_range[0] * state.video_fps
+                    
                     url_submit = st.button(label="Submit", key="url_submit")
                     if url_submit:
                         frames_with5 = preprocess(piano_detection_model, video)
                         inference(video_to_roll_model, frames_with5)
+                        os.remove("./video/01.mp4")
             else:
                 st.error("Please input url !")
                 
@@ -205,16 +213,18 @@ if __name__ == "__main__":
         video = st.file_uploader(label="VIDEO", type=["mp4", "wav", "avi"])
 
         if video:
-            with open("01.mp4", "wb") as f:
+            with open("./video/01.mp4", "wb") as f:
                 f.write(video.getbuffer())
 
-            probe = ffmpeg.probe("01.mp4")
+            probe = ffmpeg.probe("./video/01.mp4")
             video = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
             
             state.video_fps = int(video['r_frame_rate'].split('/')[0])
             state.video_range = st.slider(label="Select video range (second)", min_value=0, max_value=int(float(video['duration'])), step=10, value=(50, 100))
-
+            state.frame_range = state.video_range[1] * state.video_fps - state.video_range[0] * state.video_fps
+            
             video_submit = st.button(label="Submit", key="video_submit")
             if video_submit:
                 frame_files = preprocess(piano_detection_model, video)
                 inference(video_to_roll_model, frame_files)
+                os.remove("./video/01.mp4")
