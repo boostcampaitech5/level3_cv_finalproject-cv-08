@@ -1,0 +1,37 @@
+seed: 42
+batch_size: 16
+num_workers: 8
+lr: 1e-8
+warmup: 4000
+epochs: 100
+model:
+    name: music_transformer
+    in_channels: 2
+    d_model: 512
+    num_heads: 8
+    vocab_size: 243
+    num_encoder_layers: 0
+    num_decoder_layers: 6
+    encoder_max_seq: 132
+    decoder_max_seq: 512
+    rpr: True
+    use_control: False
+    n_layer: 10
+    dropout: 0.1
+    layout: hands
+dataset:
+    name: AtinPiano
+    pose_dir: /opt/ml/pose-to-midi/data/AtinPiano/pose
+    midi_dir: /opt/ml/pose-to-midi/data/AtinPiano/midi
+    split_csv_dir: /opt/ml/pose-to-midi/resources/AtinPiano
+    pose_layout: hands
+    use_control: False
+    duration: 6.0
+    fps: 22
+    duplication: 100
+    events_per_sec: 80
+    random_shift_rate: 0.2
+    instrument: Acoustic Grand Piano
+    streams:
+        midi: /opt/ml/pose-to-midi/data/AtinPiano/midi
+        pose: /opt/ml/pose-to-midi/data/AtinPiano/pose
