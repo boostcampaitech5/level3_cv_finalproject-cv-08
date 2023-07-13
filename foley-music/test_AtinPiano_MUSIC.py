@@ -78,8 +78,7 @@ def main(args):
 
     model: MusicTransformer = model_factory.build(device=DEVICE)
 
-    # model.load_state_dict(cp['state_dict'])
-    model.load_state_dict(cp, strict=False)
+    model.load_state_dict(cp['state_dict'])
     model.eval()
 
     # dl = dataloader_factory.build(split='train')

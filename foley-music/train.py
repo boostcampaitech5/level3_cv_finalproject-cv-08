@@ -182,7 +182,13 @@ class Engine(BaseEngine):
             
             os.makedirs(ckpt_dir, exist_ok=True)
             ckpt_path = os.path.join(ckpt_dir, ckpt_name)
-            torch.save(self.model.state_dict(), ckpt_path)
+            torch.save(
+                {
+                    'state_dict': self.model.module.state_dict(),
+                    'optimizer': self.optimizer.state_dict()
+                },
+                ckpt_path
+            )
 
     def close(self):
         pass
