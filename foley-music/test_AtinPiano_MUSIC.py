@@ -54,21 +54,23 @@ def main(args):
 
     checkpoint_path = Path(args.checkpoint)
     video_dir = Path(args.video)
-    output_dir = Path(args.output)
+
+    output_dir = os.path.join(
+        checkpoint_path.parent.parent, 
+        f"{args.checkpoint.split('/')[-1].split('.')[0]}_generate/{args.ds}"
+    )
+    output_dir = Path(output_dir)
+
     if args.control is not None:
         control_tensor = utils.midi.pitch_histogram_string_to_control_tensor(args.control)
     else:
         control_tensor = None
 
     cp = torch.load(checkpoint_path)
-    # cfg = ConfigFactory.parse_file(
-    #     checkpoint_path.parent / 'config.conf'
-    # )
     cfg_path = f'{checkpoint_path.parent.parent}/config.yaml'
     with open(cfg_path, 'rt') as f:
         cfg = EasyDict(yaml.safe_load(f))
 
-    # instrument = cfg.get_string('dataset.instrument', args.instrument)
     instrument = cfg.dataset.instrument
     pprint(cfg)
     print('Using Instrument:', instrument)
@@ -81,8 +83,7 @@ def main(args):
     model.load_state_dict(cp['state_dict'])
     model.eval()
 
-    # dl = dataloader_factory.build(split='train')
-    dl = dataloader_factory.build(split='val')
+    dl = dataloader_factory.build(split=args.ds)
     ds: YoutubeDataset = dl.dataset
     pprint(ds.samples[:5])
 
@@ -94,9 +95,13 @@ def main(args):
     # index = -1
     # for data in tqdm(ds):
     #     index += 1
-    for data in tqdm(ds):
-        index = data['index']
+    for i, data in enumerate(tqdm(ds)):
+        if args.ds == 'train':
+            index = i
+        else:
+            index = data['index']
         pose = data['pose']
+        midi_y = data['midi_y']
 
         pose = pose.cuda(non_blocking=True)
         if control_tensor is not None:
@@ -154,13 +159,26 @@ def main(args):
             rate=22050,
         )
 
+        gt_midi_path = midi_dir / f'gt_{sample.vid}{add_name}.midi'
+        gt_pm = utils.midi.tensor_to_pm(
+            midi_y.squeeze(),
+            instrument=instrument
+        )
+        gt_pm.write(str(gt_midi_path))
+
+        gt_audio_path = audio_dir / f'gt_{sample.vid}{add_name}.wav'
+        utils.midi.pm_to_wav(
+            gt_pm,
+            gt_audio_path,
+            rate=22050,
+        )
+
         if not args.only_audio:
             # find only video in val.csv
             in_path = get_video_path(video_dir, sample.vid)
             vid_name = sample.vid
             vid_dir = os.path.join(output_dir, 'video', vid_name)
-            if not os.path.exists(vid_dir):
-                os.mkdir(vid_dir)
+            os.makedirs(vid_dir, exist_ok=True)
 
             # cut video to fixed length
             vid_dir_name = sample.vid  # just name, no suffix like .mp4
@@ -179,9 +197,10 @@ if __name__ == '__main__':
     parser.add_argument(
         'checkpoint'
     )
-    parser.add_argument(
-        '-o', '--output'
-    )
+    parser.add_argument('--ds', default='val', choices=['train', 'val'])
+    # parser.add_argument(
+    #     '-o', '--output'
+    # )
     parser.add_argument(
         '-v', '--video', default=""
     )
@@ -196,3 +215,4 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     main(args)
+
