@@ -10,7 +10,8 @@ import wandb
 class Video2Roll_Trainer(object):
     def __init__(self, data_loader, test_data_loader, model, criterion, optimizer, lr_scheduler, epochs, save_model_path, device):
         # self.save_model_path = './models/Video2Roll.pth' # change to your path
-        self.save_model_path = os.path.join(save_model_path, "Video2Roll.pth")
+        self.save_model_path_loss = os.path.join(save_model_path, "Video2Roll_bestloss.pth")
+        self.save_model_path_f1 = os.path.join(save_model_path, "Video2Roll_bestf1.pth")
         self.test_loader = test_data_loader
         self.data_loader = data_loader
         self.net = model
@@ -43,6 +44,7 @@ class Video2Roll_Trainer(object):
             self.net.eval()
             metric_dict = self.validate()
             val_metric_best = 0
+            val_f1_best = 0
             print('-' * 85)
             print('Train Summary | Epoch {0} | Time {1:.2f}s | '
                   'Train Loss {2:.3f}'.format(
@@ -52,6 +54,7 @@ class Video2Roll_Trainer(object):
                 print(metric_per_ds)
                 if ds_idx == 'ds0':
                     val_metric_best = metric_per_ds['val_loss']
+                    val_f1_best = metric_per_ds['val_f1_score_2']
                 wandb.log({
                     f"{ds_idx}_train_loss": tr_avg_loss, 
                     f"{ds_idx}_train_precision": tr_avg_precision, 
@@ -69,11 +72,11 @@ class Video2Roll_Trainer(object):
             if val_metric_best < pre_val_loss:
                 print(f"validation loss improved {pre_val_loss} -> {val_metric_best}")
                 pre_val_loss = val_metric_best
-                torch.save(self.net.state_dict(), self.save_model_path)
-            # if val_fscore > pre_val_loss:
-            #     print(f"validation f1 improved {pre_f1_score} -> {val_fscore}")
-            #     pre_f1_score = val_fscore
-            #     torch.save(self.net.state_dict(), self.save_model_path)
+                torch.save(self.net.state_dict(), self.save_model_path_loss)
+            if val_f1_best > pre_f1_score:
+                print(f"validation f1 improved {pre_f1_score} -> {val_f1_best}")
+                pre_f1_score = val_f1_best
+                torch.save(self.net.state_dict(), self.save_model_path_f1)
             # Save model each epoch
             self.val_loss[epoch] = val_metric_best
             self.tr_loss[epoch] = tr_avg_loss
