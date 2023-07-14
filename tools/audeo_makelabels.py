@@ -146,7 +146,7 @@ if __name__ == '__main__':
     parser.add_argument("--save_label_path", type=str, default="../data/ytdataset/labels_audeo/training/", help='default : "../data/ytdataset/labels_audeo/training/"')
     parser.add_argument("--save_midi_path", type=str, default="../data/ytdataset/midi/training/", help='default: "../data/ytdataset/midi/training/"')
     parser.add_argument("--onset_mode", action="store_true")
-    parser.add_argument("--dataset_mode", type=str, default="pianoyt")
+    parser.add_argument("--dataset_mode", type=str, default="pianoyt", help='[pianoyt, of]')
     
     args = parser.parse_args()
     
