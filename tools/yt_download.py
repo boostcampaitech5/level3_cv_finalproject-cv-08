@@ -11,8 +11,11 @@ if __name__ == '__main__':
     
     parser.add_argument("--csv_path", type=str, default="../data/PianoYT/pianoyt.csv", help='default="../data/PianoYT/pianoyt.csv"')
     parser.add_argument("--save_path", type=str, default="../data/videos", help='default="../data/videos"')
+    parser.add_argument("--mode", type=str, default="video", help='one of video, audio')
     
     args = parser.parse_args()
+    
+    assert args.mode in ['video', 'audio']
     
     music_list = pd.read_csv(args.csv_path, names=["index", "link", "train/test", "crop_minY", "crop_maxY", "crop_minX", "crop_maxX"])
     
@@ -29,8 +32,10 @@ if __name__ == '__main__':
             output_path = os.path.join(args.save_path, "test/")
         try:
             yt = YouTube(music_link)
-            # yt.streams.filter(mime_type="video/mp4").get_highest_resolution().download(output_path=output_path, filename_prefix=f"{music_idx}_")
-            yt.streams.filter(type="audio").order_by("abr").last().download(output_path=output_path, filename_prefix=f"{music_idx}_")
+            if args.mode == 'video':
+                yt.streams.filter(mime_type="video/mp4").get_highest_resolution().download(output_path=output_path, filename_prefix=f"{music_idx}_")
+            elif args.mode == 'audio':
+                yt.streams.filter(type="audio").order_by("abr").last().download(output_path=output_path, filename_prefix=f"{music_idx}_")
         except Exception as ex:
             err_msg = traceback.format_exc()
             print(err_msg)
