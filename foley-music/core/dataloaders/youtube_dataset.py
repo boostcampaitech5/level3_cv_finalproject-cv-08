@@ -172,9 +172,12 @@ class YoutubeDataset(Dataset):
             )
             result['audio'] = torch.from_numpy(audio)
 
-        if self.split != 'train':
-            result['start_time'] = start_time
-            result['index'] = index
+        # if self.split != 'train':
+        #     result['start_time'] = start_time
+        #     result['index'] = index
+
+        result['start_time'] = start_time
+        result['index'] = index
 
         return result
 
@@ -188,11 +191,7 @@ class YoutubeDataset(Dataset):
             result.append(sample)
         return result
 
-    def pad_midi_events(
-            self,
-            midi: List[int],
-            control: Optional[np.ndarray] = None
-    ) -> (List[int], Optional[np.ndarray]):
+    def pad_midi_events(self, midi: List[int], control: Optional[np.ndarray] = None):
         new_midi = [self.SOS_IDX] + midi + [self.EOS_IDX]
         # new_midi = [self.SOS_IDX] + midi
         if control is not None:

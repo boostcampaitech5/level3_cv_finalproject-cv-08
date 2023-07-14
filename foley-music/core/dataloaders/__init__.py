@@ -11,7 +11,7 @@ class DataLoaderFactory:
         self.cfg = cfg
         self.num_gpus = max(1, torch.cuda.device_count())
 
-    def build(self, split='train'):
+    def build(self, split='train', shuffle=None):
         # dset = self.cfg.get_string('dataset.dset')
 
         # if dset == 'urmp':
@@ -44,7 +44,7 @@ class DataLoaderFactory:
             # num_workers=self.cfg.get_int('num_workers') * self.num_gpus,
             batch_size=self.cfg.batch_size * self.num_gpus,
             num_workers=self.cfg.num_workers * self.num_gpus,
-            shuffle=(split == 'train')
+            shuffle=(split == 'train' if shuffle is None else shuffle)
         )
 
         print('Real batch size:', loader.batch_size)

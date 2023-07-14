@@ -83,23 +83,19 @@ def main(args):
     model.load_state_dict(cp['state_dict'])
     model.eval()
 
-    dl = dataloader_factory.build(split=args.ds)
+    dl = dataloader_factory.build(split=args.ds, shuffle=False)
     ds: YoutubeDataset = dl.dataset
     pprint(ds.samples[:5])
 
-    # length = cfg.get_float('dataset.duration')  # how long is your produced audio
     length = cfg.dataset.duration  # how long is your produced audio
-    os.makedirs(output_dir / 'audio', exist_ok=True)
-    os.makedirs(output_dir / 'video', exist_ok=True)
 
-    # index = -1
-    # for data in tqdm(ds):
-    #     index += 1
-    for i, data in enumerate(tqdm(ds)):
-        if args.ds == 'train':
-            index = i
-        else:
-            index = data['index']
+    # for i, data in enumerate(tqdm(ds)):  #TODO: check train index
+    #     if args.ds == 'train':
+    #         index = i
+    #     else:
+    #         index = data['index']
+    for data in tqdm(ds):
+        index = data['index']
         pose = data['pose']
         midi_y = data['midi_y']
 
@@ -136,8 +132,12 @@ def main(args):
             else:
                 continue
 
-        ss = change_time_format(sample.start_time)
-        dd = change_time_format(sample.start_time + length)
+        if args.ds == 'train':
+            ss = change_time_format(data['start_time'])
+            dd = change_time_format(data['start_time'] + length)
+        else:
+            ss = change_time_format(sample.start_time)
+            dd = change_time_format(sample.start_time + length)
         add_name = '-' + ss + '-' + dd
 
         midi_dir = output_dir / 'midi' / f'{sample.vid}'
