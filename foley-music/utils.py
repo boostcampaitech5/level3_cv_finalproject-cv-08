@@ -1,4 +1,7 @@
+import os
+import random
 from collections import defaultdict
+import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -76,7 +79,7 @@ class CurvePlotter:
 
     def plot_learning_curve(self, label):
         plt.figure(self.fignum)
-        plt.plot(np.arange(len(self.values[label])),
+        plt.plot(np.arange(1, len(self.values[label])+1),
                  self.values[label],
                  label=label,
                  marker='o',
@@ -146,3 +149,15 @@ def write_msg(epoch, train_metrics, valid_metrics, metric, end='\n'):
     # if end == '':
     #     epoch_msg += '[!n]'
     # logging.info(epoch_msg)
+
+
+def seed_everything(seed: int=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # multi-GPU
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False

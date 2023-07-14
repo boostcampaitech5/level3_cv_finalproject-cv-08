@@ -1,12 +1,11 @@
 """
 Code modified from:
     https://github.com/chuangg/Foley-Music/blob/main/test_AtinPiano_MUSIC.py
-    
+
 C Major
 -c '1,0,1,0,1,1,0,1,0,1,0,1'
 C Minor
 -c '1,0,1,1,0,1,0,1,1,0,0,1'
-
 """
 
 from core.models import ModelFactory
@@ -14,7 +13,6 @@ from core.dataloaders import DataLoaderFactory
 import argparse
 from pathlib import Path
 import torch
-# from pyhocon import ConfigFactory, ConfigTree
 from pprint import pprint
 from tqdm import tqdm
 from core.dataloaders.youtube_dataset import YoutubeDataset
@@ -24,6 +22,7 @@ import os
 
 import yaml
 from easydict import EasyDict
+from utils import seed_everything
 
 
 DEVICE = torch.device('cuda')
@@ -54,13 +53,11 @@ def main(args):
 
     checkpoint_path = Path(args.checkpoint)
     video_dir = Path(args.video)
-
     output_dir = os.path.join(
         checkpoint_path.parent.parent, 
         f"{args.checkpoint.split('/')[-1].split('.')[0]}_generate/{args.ds}"
     )
     output_dir = Path(output_dir)
-
     if args.control is not None:
         control_tensor = utils.midi.pitch_histogram_string_to_control_tensor(args.control)
     else:
@@ -70,6 +67,8 @@ def main(args):
     cfg_path = f'{checkpoint_path.parent.parent}/config.yaml'
     with open(cfg_path, 'rt') as f:
         cfg = EasyDict(yaml.safe_load(f))
+
+    seed_everything(cfg.seed)
 
     instrument = cfg.dataset.instrument
     pprint(cfg)
@@ -215,4 +214,3 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     main(args)
-

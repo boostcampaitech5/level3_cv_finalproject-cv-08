@@ -3,6 +3,7 @@ Code modified from:
     https://github.com/chuangg/Foley-Music/blob/main/train.py
 """
 import os
+from datetime import datetime, timezone, timedelta
 import yaml
 import json
 from tqdm import tqdm
@@ -20,7 +21,7 @@ from core.optimizer import CustomSchedule
 from core.metrics import compute_epiano_accuracy
 
 from utils import (AverageMeter, MetricTrakcer, init_curves, plot_curves,
-                   write_msg_header, write_msg)
+                   write_msg_header, write_msg, seed_everything)
 
 
 class Engine(BaseEngine):
@@ -199,7 +200,8 @@ def main():
     with open(cfg_path, 'rt') as f:
         cfg = EasyDict(yaml.safe_load(f))
 
-    from datetime import datetime, timezone, timedelta
+    seed_everything(cfg.seed)
+
     cfg.exp = datetime.now(timezone(timedelta(hours=9))).strftime("%y%m%d-%H%M")
 
     results_dir = f'./results/{cfg.exp}'
