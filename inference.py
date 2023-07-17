@@ -44,7 +44,7 @@ def video_to_roll_inference(model, video_info, frames_with5):
 
     return roll, logit, wav, pm
 
-def roll_to_midi_inference(_model, video_info, logit):
+def roll_to_midi_inference(_model, logit):
     min_key, max_key = 15, 65
     frame = 50
     input_shape = (1, max_key - min_key + 1, 2 * frame)

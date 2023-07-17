@@ -104,14 +104,16 @@ if __name__ == "__main__":
                     probe = ffmpeg.probe("./data/inference/01.mp4")
                     video_info = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)      
                     
-                    video_fps = int(math.ceil(int(video_info['r_frame_rate'].split('/')[0]) / int(video_info['r_frame_rate'].split('/')[1])))
+                    video_info['video_fps'] = int(math.ceil(int(video_info['r_frame_rate'].split('/')[0]) / int(video_info['r_frame_rate'].split('/')[1])))
                     video_info['video_select_range'] = st.slider(label="Select video range (second)", min_value=0, max_value=int(float(video_info['duration'])), step=10, value=(50, 100), key='url')
-                    video_info['video_select_frame'] = video_info['video_select_range'][1] * video_fps - video_info['video_select_range'][0] * video_fps
+                    video_info['video_select_frame'] = video_info['video_select_range'][1] * video_info['video_fps'] - video_info['video_select_range'][0] * video_info['video_fps']
                     
                     url_submit = st.button(label="Submit", key="url_submit")
                     if url_submit:
+                        s_t = time.time()
                         with st.spinner("Data Preprocessing ..."):
                             frames_with5 = preprocess(piano_detection_model, video_info, key='url')
+                        print(time.time()-s_t)
                         preprocess_success_msg = st.success("Data Preprocessed Successfully!")
                         
                         with st.spinner("Roll Data Inferencing ..."):
@@ -119,7 +121,7 @@ if __name__ == "__main__":
                         roll_inference_success_msg = st.success("Data Inferenced successfully!")
                         
                         with st.spinner("Midi Data Inferencing ..."):
-                            midi_wav = roll_to_midi_inference(roll_to_midi_model, video_info, logit)
+                            midi_wav = roll_to_midi_inference(roll_to_midi_model, logit)
                         midi_inference_success_msg = st.success("Data Inferenced successfully!")
                         
                         time.sleep(1)
