@@ -46,7 +46,9 @@ def piano_detection_load_model(device):
     
     model = YOLO(model_path)
     model.to(device)
-    
+    dummy_for_warmup = np.random.rand(720, 1280, 3)
+    for _ in range(10):
+        model.predict(source=dummy_for_warmup, device='0', verbose=False)    
     return model
 
 
