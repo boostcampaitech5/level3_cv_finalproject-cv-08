@@ -1,7 +1,18 @@
-import torch.nn as nn
+import cv2
 import math
-import torch.nn.functional as F
+import ffmpeg
+import numpy as np
+from PIL import Image
+from typing import List, Tuple
+
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torchvision.transforms as transforms
+
+from roll_to_wav import MIDISynth
+from ultralytics import YOLO
+
 
 __all__ = ['ResNet', 'resnet18']
 
@@ -85,7 +96,6 @@ class BasicBlock(nn.Module):
 
         return out
 
-
 class Bottleneck(nn.Module):
     expansion = 4
 
@@ -122,7 +132,6 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
 
         return out
-
 
 class ResNet(nn.Module):
 
@@ -249,12 +258,104 @@ class ResNet(nn.Module):
 
         return out
 
-
 def resnet18(**kwargs):
     """Constructs a ResNet-18 model.
     """
     model = ResNet(BasicBlock, layers=[2, 2, 2, 2], top_channel_nums=512, reduced_channel_nums=64, **kwargs)
     return model
+
+def get_video2roll_model(model_path: str="/opt/ml/data/models/video_to_roll.pth") -> resnet18:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = resnet18().to(device)
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
+    return model
+
+def get_pianodetection_model(model_path: str="/opt/ml/data/models/piano_detection.pt"):
+    model = YOLO(model_path)
+    return model
+
+def preprocess(video_info, video_range) -> List:
+    model = get_pianodetection_model()
+    
+    out, _ = (
+        ffmpeg
+        .input("./video/01.mp4", ss=video_range[0], t=video_range[1]-video_range[0])
+        .output('pipe:', format='rawvideo', pix_fmt='rgb24', loglevel="quiet")
+        .run(capture_stdout=True)
+    )
+
+    frames = (
+        np
+        .frombuffer(out, np.uint8)
+        .reshape([-1, video_info['height'], video_info['width'], 3])
+    )
+    
+    key_detected = False
+    
+    for i, frame in enumerate(frames):
+        # Piano Detection
+        if not key_detected:
+            pred = model.predict(source=frame, device='0', verbose=False)
+            if pred[0].boxes:
+                if pred[0].boxes.conf.item() > 0.8:
+                    xmin, ymin, xmax, ymax = tuple(np.array(pred[0].boxes.xyxy.detach().cpu()[0], dtype=int))
+                    cv2.imwrite("02.jpg", cv2.cvtColor(frame[ymin:ymax, xmin:xmax], cv2.COLOR_BGR2GRAY))
+                    start_idx = i
+                    key_detected = True
+                    break
+    
+    if key_detected:
+        frames = np.mean(frames[start_idx:, ymin:ymax, xmin:xmax, ...], axis=3)
+        frames = np.stack([cv2.resize(f, (900 ,100), interpolation=cv2.INTER_LINEAR) for f in frames], axis=0) / 255.
+    else:
+        # 영상 전체에서 Top View 피아노가 없을 경우 None 반환
+        return None
+        
+    # 5 frame 씩
+    frames_with5 = []
+    for i in range(len(frames)):
+        if i >= 2 and i < len(frames)-2:
+            file_list = [frames[i-2], frames[i-1], frames[i], frames[i+1], frames[i+2]]
+        elif i < 2:
+            file_list = [frames[i], frames[i], frames[i], frames[i+1], frames[i+2]]
+        else:
+            file_list = [frames[i-2], frames[i-1], frames[i], frames[i], frames[i]]
+        frames_with5.append(file_list)
+    
+    frames_with5 = torch.Tensor(np.array(frames_with5)).float().cuda()
+    
+    return frames_with5
+
+def predict(frames_with5, frame_range):
+    model = get_video2roll_model()
+    
+    min_key, max_key = 15, 65
+    threshold = 0.7
+
+    batch_size = 32
+    preds_roll = []
+    for idx in range(0, len(frames_with5), batch_size):
+        batch_frames = torch.stack([frames_with5[i] for i in range(idx, min(len(frames_with5), idx+batch_size))])
+        pred_logits = model(batch_frames)
+        pred_roll = torch.sigmoid(pred_logits) >= threshold   
+        numpy_pred_roll = pred_roll.cpu().detach().numpy().astype(np.int_)
+        
+        for pred in numpy_pred_roll:
+            preds_roll.append(pred)
+
+    preds_roll = np.asarray(preds_roll).squeeze()
+    if preds_roll.shape[0] != frame_range:
+        temp = np.zeros((frame_range, max_key-min_key+1))
+        temp[:preds_roll.shape[0], :] = preds_roll[:frame_range, :]
+        preds_roll = temp
+
+    roll = np.zeros((frame_range, 88))
+    roll[:, min_key:max_key+1] = preds_roll
+    wav, pm = MIDISynth(roll, frame_range).process_roll()
+
+    return roll, wav
+
 
 if __name__ == "__main__":
     net = resnet18()
