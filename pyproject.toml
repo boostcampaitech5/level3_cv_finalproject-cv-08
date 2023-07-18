@@ -21,6 +21,7 @@ youtube-dl = "^2021.12.17"
 ultralytics = "^8.0.132"
 librosa = "^0.10.0.post2"
 pretty-midi = "^0.2.10"
+pytube = "^15.0.0"
 
 [build-system]
 requires = ["poetry-core"]
