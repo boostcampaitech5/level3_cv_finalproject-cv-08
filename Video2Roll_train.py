@@ -22,6 +22,43 @@ import wandb
 
 from utils.util import get_current_time, load_config, validate_config
 
+class F1Loss:
+    def __init__(self):
+        pass
+    
+    def __call__(self, pred, target):
+        eps = 1e-8
+        label_np_T = target.to(torch.float32)
+        roll_output_T = torch.sigmoid(pred)
+
+
+        tp = torch.sum(label_np_T*roll_output_T, dim=0).to(torch.float32)
+        tn = torch.sum((1-label_np_T)*(1-roll_output_T), dim=0).to(torch.float32)
+        fp = torch.sum((1-label_np_T)*roll_output_T, dim=0).to(torch.float32)
+        fn = torch.sum(label_np_T*(1-roll_output_T), dim=0).to(torch.float32)
+
+        p = tp / (tp + fp+eps)
+        r = tp / (tp + fn+eps)
+
+        # f1 = 2*p*r / (p+r+eps)
+        # print(f1.shape)
+        # f1 = torch.nansum(f1) / (torch.sum(~torch.isnan(f1)) + eps)
+        # return 1-f1
+        f1 = 2* (p*r) / (p + r + eps)
+        f1 = f1.clamp(min=eps, max=1-eps)
+        return 1 - f1.mean()
+    
+class Hybrid:
+    def __init__(self):
+        self.f1 = F1Loss()
+        self.bce = nn.BCEWithLogitsLoss()
+    
+    def __call__(self, pred, target):
+        f1_loss = self.f1(pred, target)
+        bce_loss = self.bce(pred, target)
+        print(f1_loss)
+        return bce_loss
+
 def main(cfg):
     save_model_path = "./experiments"
     expr_count = len(os.listdir(save_model_path))
@@ -60,7 +97,8 @@ def main(cfg):
     
     net = net.to(device)
     optimizer = getattr(optim, cfg.optimizer.type)(net.parameters(), **cfg.optimizer.args)
-    criterion = nn.BCEWithLogitsLoss()
+    # criterion = nn.BCEWithLogitsLoss()
+    criterion = F1Loss()
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
     # data_loader, test_data_loader, model, criterion, optimizer, lr_scheduler, epochs, save_model_path
     trainer = Video2Roll_Trainer(
