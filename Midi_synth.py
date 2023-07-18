@@ -7,23 +7,23 @@ import librosa
 import soundfile as sf
 # Synthesizing Audio using Fluid Synth
 class MIDISynth():
-    def __init__(self, out_folder, video_name, instrument, midi=True):
+    def __init__(self, out_folder, video_name, instrument, out_path, midi=True):
         self.video_name = video_name
         # synthesize midi or roll
         self.midi = midi
         # synthsized output dir, change to your own path
-        self.syn_dir = './outputs_test/Midi_Synth/'
-        self.min_key = 0
+        self.syn_dir = out_path
+        self.min_key = 3
         self.max_key = 84
         self.frame = 50
         self.piano_keys = 88
         if self.midi:
-            self.midi_out_folder = out_folder + video_name
-            self.syn_dir = self.syn_dir + 'w_Roll2Midi/'
+            self.midi_out_folder = os.path.join(out_folder, video_name)
+            self.syn_dir = os.path.join(self.syn_dir, 'w_Roll2Midi/')
             self.process_midi()
         else:
-            self.est_roll_folder = out_folder + video_name
-            self.syn_dir = self.syn_dir + 'wo_Roll2Midi/'
+            self.est_roll_folder = os.path.join(out_folder, video_name)
+            self.syn_dir = os.path.join(self.syn_dir, 'wo_Roll2Midi/')
             self.process_roll()
         self.spf = 0.04 # second per frame
         self.sample_rate = 16000
@@ -159,6 +159,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--video_name", type=str)
     parser.add_argument("--midi_path", type=str, default='./outputs_test/r2m_output/', help="default='./outputs_test/r2m_output/'")
+    parser.add_argument("--output_path", type=str, default='./outputs_test/Midi_synth/', help="default='./outputs_test/Midi_synth/'")
     parser.add_argument("--iter", action="store_true")
     
     args = parser.parse_args()
@@ -169,12 +170,12 @@ if __name__ == "__main__":
     Midi_out_folder = args.midi_path# Generated Midi output folder, change to your own path
     if args.iter:
         for video_name in os.listdir(Midi_out_folder):
-            Synth = MIDISynth(Midi_out_folder, video_name, instrument, midi=True)
+            Synth = MIDISynth(Midi_out_folder, video_name, instrument, out_path = args.output_path, midi=True)
             Synth.GetNote()
             Synth.Synthesize()
     else:
         video_name = args.video_name
-        Synth = MIDISynth(Midi_out_folder, video_name, instrument, midi=True)
+        Synth = MIDISynth(Midi_out_folder, video_name, instrument, out_path = args.output_path, midi=True)
         Synth.GetNote()
         Synth.Synthesize()
 
