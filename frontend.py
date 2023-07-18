@@ -178,4 +178,3 @@ if __name__ == "__main__":
                 st.image(np.rot90(roll, 1), width=700)
                 st.audio(roll_wav, sample_rate=16000)
                 st.audio(midi_wav, sample_rate=16000)
->>>>>>> kgw/streamlit
