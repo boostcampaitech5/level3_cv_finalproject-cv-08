@@ -123,7 +123,7 @@ if __name__ == "__main__":
                         roll_inference_success_msg = st.success("Data Inferenced successfully!")
                         
                         with st.spinner("Midi Data Inferencing ..."):
-                            midi_wav = roll_to_midi_inference(roll_to_midi_model, logit)
+                            midi_wav, midi = roll_to_midi_inference(roll_to_midi_model, logit)
                         midi_inference_success_msg = st.success("Data Inferenced successfully!")
                         
                         time.sleep(1)
@@ -136,6 +136,7 @@ if __name__ == "__main__":
                         st.image(np.rot90(roll, 1), width=700)
                         st.audio(roll_wav, sample_rate=16000)
                         st.audio(midi_wav, sample_rate=16000)
+                        st.text("game video")
                 
             else:
                 st.error("Please input url !")
@@ -165,7 +166,7 @@ if __name__ == "__main__":
                 roll_inference_success_msg = st.success("Data Inferenced successfully!")
                 
                 with st.spinner("Midi Data Inferencing ..."):
-                    midi_wav = roll_to_midi_inference(roll_to_midi_model, video_info, logit)
+                    midi_wav, midi = roll_to_midi_inference(roll_to_midi_model, video_info, logit)
                 midi_inference_success_msg = st.success("Data Inferenced successfully!")
                 
                 time.sleep(1)
@@ -178,3 +179,10 @@ if __name__ == "__main__":
                 st.image(np.rot90(roll, 1), width=700)
                 st.audio(roll_wav, sample_rate=16000)
                 st.audio(midi_wav, sample_rate=16000)
+                st.text("game video")
+                
+    with st.spinner("load video"):
+        video_file = open("./video.mp4", "rb")
+        video_bytes = video_file.read()
+
+    st.video(video_bytes, format="video/mp4")

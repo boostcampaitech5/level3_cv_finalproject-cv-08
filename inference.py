@@ -84,4 +84,4 @@ def roll_to_midi_inference(_model, logit):
     
     wav, pm = MIDISynth(roll=None, midi=midi, frame=midi.shape[0], is_midi=True).process_midi()
     
-    return wav
+    return wav, midi
