@@ -1,3 +1,6 @@
 __pycache__
-
-*.midi
+*.mp4
+*.jpg
+video
+data/
+*.ipynb
