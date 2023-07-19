@@ -12,7 +12,7 @@ def video_to_roll_inference(model, video_info, frames_with5):
     batch_size = 32
     preds_roll, preds_logit = [], []
     for idx in range(0, len(frames_with5), batch_size):
-        batch_frames = torch.stack([frames_with5[i] for i in range(idx, min(len(frames_with5), idx+batch_size))])
+        batch_frames = torch.stack([torch.Tensor(np.asarray(frames_with5[i])).float().cuda() for i in range(idx, min(len(frames_with5), idx+batch_size))])
         pred_logits = model(batch_frames)
         pred_roll = torch.sigmoid(pred_logits) >= threshold   
         numpy_pred_roll = pred_roll.cpu().detach().numpy().astype(np.int_)
@@ -84,4 +84,4 @@ def roll_to_midi_inference(_model, logit):
     
     wav, pm = MIDISynth(roll=None, midi=midi, frame=midi.shape[0], is_midi=True).process_midi()
     
-    return wav
+    return wav, pm
