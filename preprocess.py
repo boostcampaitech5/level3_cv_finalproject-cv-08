@@ -1,8 +1,8 @@
 import cv2
-import torch
+import time
 import numpy as np
 import concurrent.futures
-import time
+
 import warnings
 warnings.filterwarnings('ignore')
 

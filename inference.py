@@ -6,8 +6,8 @@ from models.roll_to_midi import Generator
 from models.make_wav import MIDISynth
 
 def video_to_roll_inference(model, video_info, frames_with5):
-    min_key, max_key = 15, 65
-    threshold = 0.4
+    min_key, max_key = 0, 84
+    threshold = 0.6
 
     batch_size = 32
     preds_roll, preds_logit = [], []
