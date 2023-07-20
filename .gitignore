@@ -4,3 +4,8 @@ __pycache__
 video
 data/
 *.ipynb
+GT.midi
+classic.wav.midi
+test.py
+universe.png
+video.mov
