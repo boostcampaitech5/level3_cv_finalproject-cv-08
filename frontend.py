@@ -215,7 +215,7 @@ if __name__ == "__main__":
                 roll_inference_success_msg = st.success("Data Inferenced successfully!")
                 
                 with st.spinner("Midi Data Inferencing ..."):
-                    midi_wav, pm_midi = roll_to_midi_inference(roll_to_midi_model, logit)
+                    midi_wav, pm_midi, midi = roll_to_midi_inference(roll_to_midi_model, logit)
                 midi_inference_success_msg = st.success("Data Inferenced successfully!")
                 
                 with st.spinner("Video Making ..."):
