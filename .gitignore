@@ -12,3 +12,4 @@ universe.png
 video.mov
 *.mov
 *.png
+*.npy

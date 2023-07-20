@@ -16,6 +16,10 @@ import os
 """
 
 """
+# 웹을 통해서 들어오는 비디오 건 1초당 60 ticks 인듯하다.
+# 
+"""
+"""
 # 1초당 440개 ticks를 화면에 표시하면 음표 막대가 너무너무 길게 나오기 때문에
 # 원래 1초당 440 ticks였는데, 1초당 22 ticks로 변경하였다.
 """
@@ -39,7 +43,7 @@ import os
 
 def video(midi):
     pygame.init()
-
+    
     BLACK = [0, 0, 0]
     WHITE = [255, 255, 255]
     GREEN = [124, 252, 0]
@@ -50,11 +54,12 @@ def video(midi):
     BAR_SIZE = [15, 10]
     keyboard = [1, 0, 1] + [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1] * 7 + [1]
     BAR_X = []
-    BAR_Y = 5  # 15
-    REFRESH_GAP = 5  # 10
+    BAR_Y = 15  # 15
+    REFRESH_GAP = 15  # 10
     FRAME = 500
-    TICKS_PER_SECOND = 22
-
+    TICKS_PER_SECOND = 1
+    VIDEO_FRAME = 25
+    
     tmp = -15
     for k in keyboard:
         if k == 1:
@@ -65,7 +70,7 @@ def video(midi):
 
     background = pygame.image.load("./universe.png")
     screen = pygame.display.set_mode(SIZE, flags=pygame.HIDDEN)
-
+    
     pygame.display.set_caption("Test")
 
     # 게임 tick설정하는 부분
@@ -77,19 +82,17 @@ def video(midi):
     # midifile = MidiFile("GT.midi", clip=True)
     # result_array = mid2arry(midifile)
     result_array = midi
-
     note_list_on = deque()
 
     # pathOut = "./video.mov"
     # out = cv2.VideoWriter(pathOut, cv2.VideoWriter_fourcc(*"mp4v"), 22, SIZE)
 
     pathOut = "./video.mov"
-    out = cv2.VideoWriter(pathOut, cv2.VideoWriter_fourcc(*"mp4v"), 22, SIZE)
+    out = cv2.VideoWriter(pathOut, cv2.VideoWriter_fourcc(*"mp4v"), VIDEO_FRAME, SIZE)
 
     # pygame.mixer.music.load("GT.midi")
     # pygame.mixer.music.play()
-
-    for i in range(440 * 3, result_array.shape[0], 440 // TICKS_PER_SECOND):
+    for i in range(0, result_array.shape[0] + VIDEO_FRAME*3, TICKS_PER_SECOND):
         screen.blit(background, (0, 0))
         start = -15
         for ii in keyboard:
@@ -107,23 +110,24 @@ def video(midi):
                     WHITE,
                     pygame.Rect(start + 10, SIZE[1] - 50, BAR_SIZE[1], 20, width=1),
                 )
-
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
-
-        for step, n in enumerate(result_array[i]):
-            if n > 0:
-                # black key
-                if keyboard[step] == 0:
-                    note_list_on.append(
-                        # x, y, key_thick, color
-                        [BAR_X[step], 0, BAR_SIZE[1], GREEN]
-                    )
-                # white key
-                else:
-                    note_list_on.append([BAR_X[step], 0, BAR_SIZE[0], WHITE])
-
+                
+        if i < result_array.shape[0]:
+            for step, n in enumerate(result_array[i]):
+                if n > 0:
+                    # black key
+                    if keyboard[step] == 0:
+                        note_list_on.append(
+                            # x, y, key_thick, color
+                            [BAR_X[step], 0, BAR_SIZE[1], GREEN]
+                        )
+                    # white key
+                    else:
+                        note_list_on.append([BAR_X[step], 0, BAR_SIZE[0], WHITE])
+        
         len_on = len(note_list_on)
         for idx in range(len_on):
             note = note_list_on.popleft()
@@ -149,12 +153,18 @@ def video(midi):
 
         pygame.display.flip()
         image_array = pygame.surfarray.array3d(screen)
-        image_surface = pygame.surfarray.make_surface(image_array)
+        # image shape : [*SIZE, 3]
         image = np.swapaxes(image_array, 0, 1)
         out.write(image)
 
         clock.tick(FRAME)
-
+          
     out.release()
-    os.system("ffmpeg -i video.mov -vcodec libx264 video.mp4")
     pygame.quit()
+
+    os.system("ffmpeg -i video.mov -vcodec libx264 video.mp4 -y")
+    
+if __name__=="__main__":
+    result_array = np.load('./dump.npy')
+    video(result_array)
+        

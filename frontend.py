@@ -216,10 +216,13 @@ if __name__ == "__main__":
                 
                 with st.spinner("Midi Data Inferencing ..."):
                     midi_wav, pm_midi, midi = roll_to_midi_inference(roll_to_midi_model, logit)
+                    np.save('./dump.npy', midi)
+                    
                 midi_inference_success_msg = st.success("Data Inferenced successfully!")
                 
                 with st.spinner("Video Making ..."):
-                    game.video(midi)
+                    midi = np.load('./dump.npy')
+                    os.system("python game.py")
                     video_file = open("./video.mp4", "rb")
                     video_bytes = video_file.read()
                 video_inference_success_msg = st.success("Video maked successfully!")
@@ -231,43 +234,43 @@ if __name__ == "__main__":
                 time.sleep(0.5)
                 midi_inference_success_msg.empty()
                 time.sleep(0.5)
-                video_inference_success_msg
+                video_inference_success_msg.empty()
                 
                 st.image(np.rot90(roll, 1), width=700)
                 st.audio(roll_wav, sample_rate=16000)
                 st.audio(midi_wav, sample_rate=16000)
                 st.video(video_bytes, format="video/mp4")
 
-                with st.spinner("Generating Sheet ..."):
-                    output_dir = "./data/outputs"
-                    os.makedirs(output_dir, exist_ok=True)
-                    output_roll_midi_path = os.path.join(output_dir, "pm_roll.midi")
-                    output_midi_path = os.path.join(output_dir, "pm.midi")
-                    pm_roll.write(output_roll_midi_path)
-                    pm_midi.write(output_midi_path)
+                # with st.spinner("Generating Sheet ..."):
+                #     output_dir = "./data/outputs"
+                #     os.makedirs(output_dir, exist_ok=True)
+                #     output_roll_midi_path = os.path.join(output_dir, "pm_roll.midi")
+                #     output_midi_path = os.path.join(output_dir, "pm.midi")
+                #     pm_roll.write(output_roll_midi_path)
+                #     pm_midi.write(output_midi_path)
 
-                    roll_score = converter.parse(output_roll_midi_path)
-                    midi_score = converter.parse(output_midi_path)
-                    roll_pdf = os.path.join(output_dir, "roll_sheet")
-                    roll_png = os.path.join(output_dir, "roll_sheet")
-                    midi_pdf = os.path.join(output_dir, "midi_sheet")
-                    converter.subConverters.ConverterLilypond().write(roll_score, fmt='png', fp=roll_png, subformats='png')
-                    converter.subConverters.ConverterLilypond().write(roll_score, fmt='pdf', fp=roll_pdf, subformats='pdf')
-                    converter.subConverters.ConverterLilypond().write(midi_score, fmt='pdf', fp=midi_pdf, subformats='pdf')
-                    for file in glob.glob(output_dir + "/*[!pdf|!png]"):
-                        os.remove(file)
+                #     roll_score = converter.parse(output_roll_midi_path)
+                #     midi_score = converter.parse(output_midi_path)
+                #     roll_pdf = os.path.join(output_dir, "roll_sheet")
+                #     roll_png = os.path.join(output_dir, "roll_sheet")
+                #     midi_pdf = os.path.join(output_dir, "midi_sheet")
+                #     converter.subConverters.ConverterLilypond().write(roll_score, fmt='png', fp=roll_png, subformats='png')
+                #     converter.subConverters.ConverterLilypond().write(roll_score, fmt='pdf', fp=roll_pdf, subformats='pdf')
+                #     converter.subConverters.ConverterLilypond().write(midi_score, fmt='pdf', fp=midi_pdf, subformats='pdf')
+                #     for file in glob.glob(output_dir + "/*[!pdf|!png]"):
+                #         os.remove(file)
 
-                st.image("./data/outputs/roll_sheet.png")
-                state.download_click = st.download_button(
-                    label="pdf download",
-                    data=open("./data/outputs/roll_sheet.pdf", 'rb').read(),
-                    file_name="piano_sheet.pdf",
-                    mime="application/pdf"
-                )
-                state.download_click = st.download_button(
-                    label="png download",
-                    data=open("./data/outputs/roll_sheet.png", 'rb').read(),
-                    file_name="piano_sheet.png",
-                    mime="image/png"
-                )
+                # st.image("./data/outputs/roll_sheet.png")
+                # state.download_click = st.download_button(
+                #     label="pdf download",
+                #     data=open("./data/outputs/roll_sheet.pdf", 'rb').read(),
+                #     file_name="piano_sheet.pdf",
+                #     mime="application/pdf"
+                # )
+                # state.download_click = st.download_button(
+                #     label="png download",
+                #     data=open("./data/outputs/roll_sheet.png", 'rb').read(),
+                #     file_name="piano_sheet.png",
+                #     mime="image/png"
+                # )
                 
