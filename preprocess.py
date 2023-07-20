@@ -1,8 +1,8 @@
 import cv2
-import torch
+import time
 import numpy as np
 import concurrent.futures
-import time
+
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -33,6 +33,8 @@ def preprocess(model, video_info, key):
         if frame_count < end:
             frame_count += 1
             ret, frame = cap.read()
+            if not ret:
+                break
             # Piano Detection
             if not key_detected:
                 pred = model.predict(source=frame, device="0", verbose=False)
@@ -73,11 +75,7 @@ def preprocess(model, video_info, key):
         frames_with5.append(file_list)
     ed = time.time()
     print(f"time to making chunks : {ed-st:.4f} s")
-    
-    st = time.time()
-    frames_with5 = torch.Tensor(np.asarray(frames_with5)).float().cuda()
-    ed = time.time()
-    print(f"time to list -> tensor : {ed-st:.4f} s")
+
     
     total_ed = time.time()
     print(f"time to total : {total_ed-total_st:.4f} s")

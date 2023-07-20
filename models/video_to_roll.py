@@ -253,7 +253,7 @@ class ResNet(nn.Module):
 def resnet18(**kwargs):
     """Constructs a ResNet-18 model.
     """
-    model = ResNet(BasicBlock, layers=[2, 2, 2, 2], top_channel_nums=512, reduced_channel_nums=64, num_classes=51, **kwargs)
+    model = ResNet(BasicBlock, layers=[2, 2, 2, 2], top_channel_nums=512, reduced_channel_nums=64, num_classes=85, **kwargs)
     return model
 
 if __name__ == "__main__":

@@ -3,6 +3,12 @@ __pycache__
 *.mp4
 *.jpg
 video
-*.png
+data/
+*.ipynb
+GT.midi
+classic.wav.midi
 test.py
+universe.png
+video.mov
 *.mov
+*.png
