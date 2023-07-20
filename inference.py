@@ -1,11 +1,37 @@
 import numpy as np
 import torch
+import streamlit as st
 from torch.autograd import Variable
 
+from models.video_to_roll import resnet18
 from models.roll_to_midi import Generator
 from models.make_wav import MIDISynth
 
-def video_to_roll_inference(model, video_info, frames_with5):
+
+@st.cache_resource
+def video_to_roll_load_model(device):
+    model_path = "./data/model/video_to_roll_best_f1.pth"
+    
+    model = resnet18().to(device)
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
+    
+    return model
+
+
+@st.cache_resource
+def roll_to_midi_load_model(device):
+    model_path = "./data/model/roll_to_midi.tar"
+    
+    model = torch.load(model_path, map_location=device)
+    
+    return model
+
+
+def video_to_roll_inference(video_info, frames_with5):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = video_to_roll_load_model(device)
+    
     min_key, max_key = 0, 84
     threshold = 0.6
 
@@ -44,15 +70,18 @@ def video_to_roll_inference(model, video_info, frames_with5):
 
     return roll, logit, wav, pm
 
-def roll_to_midi_inference(_model, logit):
+def roll_to_midi_inference(video_info, logit):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    load_model = roll_to_midi_load_model(device)
+    
     min_key, max_key = 15, 65
     frame = 50
     input_shape = (1, max_key - min_key + 1, 2 * frame)
     
     model = Generator(input_shape).cuda()
-    model.load_state_dict(_model['state_dict_G'])
+    model.load_state_dict(load_model['state_dict_G'])
     
-    data = [torch.from_numpy(logit[i:i+50]) for i in range(0, len(logit), 50)]
+    data = [torch.from_numpy(logit[i:i+frame]) for i in range(0, len(logit), frame)]
 
     final_data = []    
     for i in range(0, len(data), 2):
@@ -81,7 +110,6 @@ def roll_to_midi_inference(_model, logit):
             results.append(numpy_pre_label[frame:, :])
     
     midi = np.concatenate(results, axis=0)
-    
     wav, pm = MIDISynth(roll=None, midi=midi, frame=midi.shape[0], is_midi=True).process_midi()
     
-    return wav, pm
+    return midi, wav, pm
