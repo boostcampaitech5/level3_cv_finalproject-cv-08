@@ -19,6 +19,7 @@ from models.video_to_roll import resnet18
 import streamlit as st
 from streamlit import session_state as state
 
+import game
 
 @st.cache_resource
 def video_to_roll_load_model(device):
@@ -126,18 +127,25 @@ if __name__ == "__main__":
                             midi_wav, midi = roll_to_midi_inference(roll_to_midi_model, logit)
                         midi_inference_success_msg = st.success("Data Inferenced successfully!")
                         
+                        with st.spinner("Video Making ..."):
+                            game.video(midi)
+                            video_file = open("./video.mp4", "rb")
+                            video_bytes = video_file.read()
+                        video_inference_success_msg = st.success("Video maked successfully!")
+                        
                         time.sleep(1)
                         preprocess_success_msg.empty()
                         time.sleep(0.5)
                         roll_inference_success_msg.empty()
                         time.sleep(0.5)
                         midi_inference_success_msg.empty()
+                        time.sleep(0.5)
+                        video_inference_success_msg.empty()
                         
                         st.image(np.rot90(roll, 1), width=700)
                         st.audio(roll_wav, sample_rate=16000)
                         st.audio(midi_wav, sample_rate=16000)
-                        st.text("game video")
-                
+                        st.video(video_bytes, format="video/mp4")
             else:
                 st.error("Please input url !")
             
@@ -169,20 +177,22 @@ if __name__ == "__main__":
                     midi_wav, midi = roll_to_midi_inference(roll_to_midi_model, video_info, logit)
                 midi_inference_success_msg = st.success("Data Inferenced successfully!")
                 
+                with st.spinner("Video Making ..."):
+                    game.video(midi)
+                    video_file = open("./video.mp4", "rb")
+                    video_bytes = video_file.read()
+                video_inference_success_msg = st.success("Video maked successfully!")
+                            
                 time.sleep(1)
                 preprocess_success_msg.empty()
                 time.sleep(0.5)
                 roll_inference_success_msg.empty()
                 time.sleep(0.5)
                 midi_inference_success_msg.empty()
+                time.sleep(0.5)
+                video_inference_success_msg
                 
                 st.image(np.rot90(roll, 1), width=700)
                 st.audio(roll_wav, sample_rate=16000)
                 st.audio(midi_wav, sample_rate=16000)
-                st.text("game video")
-                
-    with st.spinner("load video"):
-        video_file = open("./video.mp4", "rb")
-        video_bytes = video_file.read()
-
-    st.video(video_bytes, format="video/mp4")
+                st.video(video_bytes, format="video/mp4")

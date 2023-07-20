@@ -6,6 +6,7 @@ import numpy as np
 from collections import deque
 from PIL import Image
 import cv2
+import os
 
 """
 # 120 beat per minute / temp0 : 50,000 microseconds per bit
@@ -36,118 +37,124 @@ import cv2
 아직 음악 시간이랑 건반 떨어지는 속도를 맞추는 것은 해결하지 못함...    
 """
 
-pygame.init()
+def video(midi):
+    pygame.init()
 
-BLACK = [0, 0, 0]
-WHITE = [255, 255, 255]
-GREEN = [124, 252, 0]
-RED = [255, 160, 122]
+    BLACK = [0, 0, 0]
+    WHITE = [255, 255, 255]
+    GREEN = [124, 252, 0]
+    RED = [255, 160, 122]
 
-SIZE = [765, 380]
-IMAGE_SIZE = [975, 50]
-BAR_SIZE = [15, 10]
-keyboard = [1, 0, 1] + [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1] * 7 + [1]
-BAR_X = []
-BAR_Y = 5  # 15
-REFRESH_GAP = 5  # 10
-FRAME = 500
-TICKS_PER_SECOND = 22
+    SIZE = [765, 380]
+    IMAGE_SIZE = [975, 50]
+    BAR_SIZE = [15, 10]
+    keyboard = [1, 0, 1] + [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1] * 7 + [1]
+    BAR_X = []
+    BAR_Y = 5  # 15
+    REFRESH_GAP = 5  # 10
+    FRAME = 500
+    TICKS_PER_SECOND = 22
 
-tmp = -15
-for k in keyboard:
-    if k == 1:
-        tmp += BAR_SIZE[0]
-        BAR_X.append(tmp)
-    else:
-        BAR_X.append(tmp + 10)
-
-background = pygame.image.load("./universe.png")
-screen = pygame.display.set_mode(SIZE)
-
-pygame.display.set_caption("Test")
-
-# 게임 tick설정하는 부분
-clock = pygame.time.Clock()
-
-# midi file 불러오고, numpy로 변경하는 부분
-done = False
-# midifile = MidiFile("classic.wav.midi", clip=True)
-midifile = MidiFile("GT.midi", clip=True)
-result_array = mid2arry(midifile)
-
-note_list_on = deque()
-
-pathOut = "./video.mp4"
-out = cv2.VideoWriter(pathOut, cv2.VideoWriter_fourcc(*"H264"), 22, SIZE)
-
-# pygame.mixer.music.load("GT.midi")
-# pygame.mixer.music.play()
-
-for i in range(440 * 3, result_array.shape[0], 440 // TICKS_PER_SECOND):
-    screen.blit(background, (0, 0))
-    start = -15
-    for ii in keyboard:
-        if ii == 1:
-            start += 15
-            pygame.draw.rect(
-                screen,
-                WHITE,
-                pygame.Rect(start, SIZE[1] - 50, BAR_SIZE[0], 50),
-                width=1,
-            )
+    tmp = -15
+    for k in keyboard:
+        if k == 1:
+            tmp += BAR_SIZE[0]
+            BAR_X.append(tmp)
         else:
-            pygame.draw.rect(
-                screen,
-                WHITE,
-                pygame.Rect(start + 10, SIZE[1] - 50, BAR_SIZE[1], 20, width=1),
-            )
+            BAR_X.append(tmp + 10)
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            done = True
+    background = pygame.image.load("./universe.png")
+    screen = pygame.display.set_mode(SIZE, flags=pygame.HIDDEN)
 
-    for step, n in enumerate(result_array[i]):
-        if n > 0:
-            # black key
-            if keyboard[step] == 0:
-                note_list_on.append(
-                    # x, y, key_thick, color
-                    [BAR_X[step], 0, BAR_SIZE[1], GREEN]
+    pygame.display.set_caption("Test")
+
+    # 게임 tick설정하는 부분
+    clock = pygame.time.Clock()
+
+    # midi file 불러오고, numpy로 변경하는 부분
+    done = False
+    # midifile = MidiFile("classic.wav.midi", clip=True)
+    # midifile = MidiFile("GT.midi", clip=True)
+    # result_array = mid2arry(midifile)
+    result_array = midi
+
+    note_list_on = deque()
+
+    # pathOut = "./video.mov"
+    # out = cv2.VideoWriter(pathOut, cv2.VideoWriter_fourcc(*"mp4v"), 22, SIZE)
+
+    pathOut = "./video.mov"
+    out = cv2.VideoWriter(pathOut, cv2.VideoWriter_fourcc(*"mp4v"), 22, SIZE)
+
+    # pygame.mixer.music.load("GT.midi")
+    # pygame.mixer.music.play()
+
+    for i in range(440 * 3, result_array.shape[0], 440 // TICKS_PER_SECOND):
+        screen.blit(background, (0, 0))
+        start = -15
+        for ii in keyboard:
+            if ii == 1:
+                start += 15
+                pygame.draw.rect(
+                    screen,
+                    WHITE,
+                    pygame.Rect(start, SIZE[1] - 50, BAR_SIZE[0], 50),
+                    width=1,
                 )
-            # white key
             else:
-                note_list_on.append([BAR_X[step], 0, BAR_SIZE[0], WHITE])
+                pygame.draw.rect(
+                    screen,
+                    WHITE,
+                    pygame.Rect(start + 10, SIZE[1] - 50, BAR_SIZE[1], 20, width=1),
+                )
 
-    len_on = len(note_list_on)
-    for idx in range(len_on):
-        note = note_list_on.popleft()
-        # 피아노 버튼이 눌렸을때 작동하는 로직
-        if note[1] == SIZE[1] - IMAGE_SIZE[1] - BAR_Y:
-            pygame.draw.rect(
-                screen,
-                # WHITE if note[2] == 15 else GREEN,
-                RED,
-                pygame.Rect(
-                    note[0],
-                    note[1] + BAR_Y,
-                    note[2],
-                    50 if note[2] == 15 else 20,
-                ),
-                width=2,
-            )
-        if note[1] < SIZE[1] - IMAGE_SIZE[1]:
-            pygame.draw.rect(
-                screen, note[3], pygame.Rect(note[0], note[1], note[2], BAR_Y)
-            )
-            note_list_on.append([note[0], note[1] + REFRESH_GAP, note[2], note[3]])
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
 
-    pygame.display.flip()
-    image_array = pygame.surfarray.array3d(screen)
-    image_surface = pygame.surfarray.make_surface(image_array)
-    image = np.swapaxes(image_array, 0, 1)
-    out.write(image)
+        for step, n in enumerate(result_array[i]):
+            if n > 0:
+                # black key
+                if keyboard[step] == 0:
+                    note_list_on.append(
+                        # x, y, key_thick, color
+                        [BAR_X[step], 0, BAR_SIZE[1], GREEN]
+                    )
+                # white key
+                else:
+                    note_list_on.append([BAR_X[step], 0, BAR_SIZE[0], WHITE])
 
-    clock.tick(FRAME)
+        len_on = len(note_list_on)
+        for idx in range(len_on):
+            note = note_list_on.popleft()
+            # 피아노 버튼이 눌렸을때 작동하는 로직
+            if note[1] == SIZE[1] - IMAGE_SIZE[1] - BAR_Y:
+                pygame.draw.rect(
+                    screen,
+                    # WHITE if note[2] == 15 else GREEN,
+                    RED,
+                    pygame.Rect(
+                        note[0],
+                        note[1] + BAR_Y,
+                        note[2],
+                        50 if note[2] == 15 else 20,
+                    ),
+                    width=2,
+                )
+            if note[1] < SIZE[1] - IMAGE_SIZE[1]:
+                pygame.draw.rect(
+                    screen, note[3], pygame.Rect(note[0], note[1], note[2], BAR_Y)
+                )
+                note_list_on.append([note[0], note[1] + REFRESH_GAP, note[2], note[3]])
 
-out.release()
-pygame.quit()
+        pygame.display.flip()
+        image_array = pygame.surfarray.array3d(screen)
+        image_surface = pygame.surfarray.make_surface(image_array)
+        image = np.swapaxes(image_array, 0, 1)
+        out.write(image)
+
+        clock.tick(FRAME)
+
+    out.release()
+    os.system("ffmpeg -i video.mov -vcodec libx264 video.mp4")
+    pygame.quit()

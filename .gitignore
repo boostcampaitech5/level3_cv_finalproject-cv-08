@@ -4,3 +4,5 @@ __pycache__
 *.jpg
 video
 *.png
+test.py
+*.mov
