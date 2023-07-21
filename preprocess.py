@@ -1,10 +1,24 @@
 import cv2
 import time
+import torch
 import numpy as np
+import streamlit as st
+from ultralytics import YOLO
 import concurrent.futures
 
 import warnings
 warnings.filterwarnings('ignore')
+
+@st.cache_resource
+def piano_detection_load_model(device):
+    model_path = "./data/model/piano_detection.pt"
+    
+    model = YOLO(model_path)
+    model.to(device)
+    dummy_for_warmup = np.random.rand(720, 1280, 3)
+    for _ in range(10):
+        model.predict(source=dummy_for_warmup, device=device, verbose=False)    
+    return model
 
 def process_frame(frame, xmin, ymin, xmax, ymax):
     frame = frame[ymin:ymax, xmin:xmax]
@@ -12,7 +26,10 @@ def process_frame(frame, xmin, ymin, xmax, ymax):
     frame = cv2.resize(frame, (900, 100), interpolation=cv2.INTER_LINEAR) / 255.
     return frame
 
-def preprocess(model, video_info, key):
+def preprocess(video_info, key):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = piano_detection_load_model(device)
+    
     total_st = time.time()
     if key == 'url': video_path = "./data/inference/01.mp4"
     else: video_path = "./data/inference/02.mp4"
