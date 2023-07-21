@@ -4,3 +4,9 @@ __pycache__
 video
 data/
 *.ipynb
+*.midi
+*.npy
+*.png
+*.mov
+
+test.py
