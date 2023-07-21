@@ -20,10 +20,12 @@ def video_to_roll_load_model(device):
 
 
 @st.cache_resource
-def roll_to_midi_load_model(device):
+def roll_to_midi_load_model(device, input_shape):
     model_path = "./data/model/roll_to_midi.tar"
     
-    model = torch.load(model_path, map_location=device)
+    weights = torch.load(model_path, map_location=device)
+    model = Generator(input_shape).cuda()
+    model.load_state_dict(weights['state_dict_G'])
     
     return model
 
@@ -72,15 +74,12 @@ def video_to_roll_inference(video_info, frames_with5):
 
 def roll_to_midi_inference(video_info, logit):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    load_model = roll_to_midi_load_model(device)
     
     min_key, max_key = 15, 65
     frame = 50
     input_shape = (1, max_key - min_key + 1, 2 * frame)
-    
-    model = Generator(input_shape).cuda()
-    model.load_state_dict(load_model['state_dict_G'])
-    
+    model = roll_to_midi_load_model(device, input_shape)
+
     data = [torch.from_numpy(logit[i:i+frame]) for i in range(0, len(logit), frame)]
 
     final_data = []    

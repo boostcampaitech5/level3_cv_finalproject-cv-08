@@ -50,48 +50,47 @@ def process(key):
             time.sleep(0.5)
             midi_inference_success_msg.empty()
         
-            st.image(np.rot90(state.roll, 1), width=700)
-            # st.audio(state.roll_wav, sample_rate=16000)
-            # st.image(np.rot90(state.roll2, 1), width=700)
-            st.audio(state.midi_wav, sample_rate=16000)
-        
+        st.image(np.rot90(state.roll, 1), width=700)
+        # st.audio(state.roll_wav, sample_rate=16000)
+        # st.image(np.rot90(state.roll2, 1), width=700)
+        st.audio(state.midi_wav, sample_rate=16000)
+        if url_submit:
             with st.spinner("Generating Sheet Music..."):
-                with st.expander(":musical_note: Sheet Music"):
-                    output_dir = "./data/outputs"
-                    os.makedirs(output_dir, exist_ok=True)
-                    output_roll_midi_path = os.path.join(output_dir, "pm_roll.midi")
-                    output_midi_path = os.path.join(output_dir, "pm.midi")
-                    pm_roll.write(output_roll_midi_path)
-                    pm_midi.write(output_midi_path)
+                output_dir = "./data/outputs"
+                os.makedirs(output_dir, exist_ok=True)
+                output_roll_midi_path = os.path.join(output_dir, "pm_roll.midi")
+                output_midi_path = os.path.join(output_dir, "pm.midi")
+                pm_roll.write(output_roll_midi_path)
+                pm_midi.write(output_midi_path)
 
-                    roll_score = converter.parse(output_roll_midi_path)
-                    midi_score = converter.parse(output_midi_path)
-                    
-                    roll_pdf = os.path.join(output_dir, "roll_sheet")
-                    roll_png = os.path.join(output_dir, "roll_sheet")
-                    midi_pdf = os.path.join(output_dir, "midi_sheet")
-                    
-                    converter.subConverters.ConverterLilypond().write(roll_score, fmt='png', fp=roll_png, subformats='png')
-                    converter.subConverters.ConverterLilypond().write(roll_score, fmt='pdf', fp=roll_pdf, subformats='pdf')
-                    converter.subConverters.ConverterLilypond().write(midi_score, fmt='pdf', fp=midi_pdf, subformats='pdf')
-                    
-                    for file in glob.glob(output_dir + "/*[!pdf|!png]"):
-                        os.remove(file)
+                roll_score = converter.parse(output_roll_midi_path)
+                midi_score = converter.parse(output_midi_path)
+                
+                roll_pdf = os.path.join(output_dir, "roll_sheet")
+                roll_png = os.path.join(output_dir, "roll_sheet")
+                midi_pdf = os.path.join(output_dir, "midi_sheet")
+                
+                converter.subConverters.ConverterLilypond().write(roll_score, fmt='png', fp=roll_png, subformats='png')
+                converter.subConverters.ConverterLilypond().write(roll_score, fmt='pdf', fp=roll_pdf, subformats='pdf')
+                converter.subConverters.ConverterLilypond().write(midi_score, fmt='pdf', fp=midi_pdf, subformats='pdf')
+                
+                for file in glob.glob(output_dir + "/*[!pdf|!png]"):
+                    os.remove(file)
 
-                    st.image("./data/outputs/roll_sheet.png")
-                    
-                    col1, col2, _, _ = st.columns(4)
-                    with col1:
-                        state.download_click = st.download_button(
-                            label="pdf download",
-                            data=open("./data/outputs/roll_sheet.pdf", 'rb').read(),
-                            file_name="piano_sheet.pdf",
-                            mime="application/pdf"
-                        )
-                    with col2:
-                        state.download_click = st.download_button(
-                            label="png download",
-                            data=open("./data/outputs/roll_sheet.png", 'rb').read(),
-                            file_name="piano_sheet.png",
-                            mime="image/png"
-                        )               
+        with st.expander(":musical_note: Sheet Music"):
+            st.image("./data/outputs/roll_sheet.png")
+            col1, col2, _, _ = st.columns(4)
+            with col1:
+                state.download_click = st.download_button(
+                    label="pdf download",
+                    data=open("./data/outputs/roll_sheet.pdf", 'rb').read(),
+                    file_name="piano_sheet.pdf",
+                    mime="application/pdf"
+                )
+            with col2:
+                state.download_click = st.download_button(
+                    label="png download",
+                    data=open("./data/outputs/roll_sheet.png", 'rb').read(),
+                    file_name="piano_sheet.png",
+                    mime="image/png"
+                )            
