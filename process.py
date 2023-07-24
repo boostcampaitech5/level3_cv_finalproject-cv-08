@@ -38,10 +38,18 @@ def process(key):
             
             with st.spinner("Midi Data Inferencing ..."):
                 midi, midi_wav, pm_midi = roll_to_midi_inference(video_info, logit)
+                np.save('./dump.npy', midi)
             midi_inference_success_msg = st.success("Data Inferenced successfully!")
+            
+            with st.spinner("Making video ..."):
+                os.system("python game.py")
+                video_file = open("./video.mp4", "rb")
+                video_bytes = video_file.read()
+            video_inference_success_msg = st.success("Video maked successfully!")
             
             state.roll, state.midi = roll, midi
             state.roll_wav, state.midi_wav = roll_wav, midi_wav
+            state.video_bytes = video_bytes
             
             time.sleep(1)
             preprocess_success_msg.empty()
@@ -49,11 +57,13 @@ def process(key):
             roll_inference_success_msg.empty()
             time.sleep(0.5)
             midi_inference_success_msg.empty()
+            time.sleep(0.5)
+            video_inference_success_msg.empty()
         
         st.image(np.rot90(state.roll, 1), width=700)
-        # st.audio(state.roll_wav, sample_rate=16000)
-        # st.image(np.rot90(state.roll2, 1), width=700)
         st.audio(state.midi_wav, sample_rate=16000)
+        st.video(state.video_bytes, format="video/mp4")
+        
         if url_submit:
             with st.spinner("Generating Sheet Music..."):
                 output_dir = "./data/outputs"

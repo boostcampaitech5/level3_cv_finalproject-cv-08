@@ -1,6 +1,11 @@
 __pycache__
+*.midi
 *.mp4
 *.jpg
 video
 data/
 *.ipynb
+test.py
+*.mov
+*.png
+*.npy
