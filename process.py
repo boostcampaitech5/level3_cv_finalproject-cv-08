@@ -12,7 +12,6 @@ import soundfile
 from preprocess import preprocess
 from inference import video_to_roll_inference, roll_to_midi_inference
 
-
 def process(key):
     if key == 'url': video_path = "./data/inference/01.mp4"
     else: video_path = "./data/inference/02.mp4"

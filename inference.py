@@ -34,7 +34,7 @@ def video_to_roll_inference(video_info, frames_with5):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = video_to_roll_load_model(device)
     
-    min_key, max_key = 0, 84
+    min_key, max_key = 3, 83
     threshold = 0.6
 
     batch_size = 32
