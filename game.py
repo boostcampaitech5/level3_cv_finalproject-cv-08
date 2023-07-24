@@ -7,6 +7,7 @@ from collections import deque
 from PIL import Image
 import cv2
 import os
+import random
 
 """
 # 120 beat per minute / temp0 : 50,000 microseconds per bit
@@ -48,6 +49,8 @@ def video(midi):
     WHITE = [255, 255, 255]
     GREEN = [124, 252, 0]
     RED = [255, 160, 122]
+    BLUE = [4, 46, 255]
+    SKY = [160, 211, 249]
 
     SIZE = [765, 380]
     IMAGE_SIZE = [975, 50]
@@ -61,6 +64,11 @@ def video(midi):
     VIDEO_FRAME = 25
     
     tmp = -15
+
+    WHITE_BAR_COLOR = RED
+    BLACK_BAR_COLOR = BLACK
+    BACKGROUND_COLOR = SKY
+
     for k in keyboard:
         if k == 1:
             tmp += BAR_SIZE[0]
@@ -68,7 +76,7 @@ def video(midi):
         else:
             BAR_X.append(tmp + 10)
 
-    background = pygame.image.load("./universe.png")
+    # background = pygame.image.load("./universe.png")
     screen = pygame.display.set_mode(SIZE, flags=pygame.HIDDEN)
     
     pygame.display.set_caption("Test")
@@ -87,13 +95,80 @@ def video(midi):
     # pathOut = "./video.mov"
     # out = cv2.VideoWriter(pathOut, cv2.VideoWriter_fourcc(*"mp4v"), 22, SIZE)
 
-    pathOut = "./video.mov"
+    pathOut = "./data/outputs/video.mov"
     out = cv2.VideoWriter(pathOut, cv2.VideoWriter_fourcc(*"mp4v"), VIDEO_FRAME, SIZE)
 
     # pygame.mixer.music.load("GT.midi")
     # pygame.mixer.music.play()
+
+    # class FlameParticle:
+    #     alpha_layer_qty = 2
+    #     alpha_glow_difference_constant = 2
+
+    #     def __init__(self, x=SIZE[0] // 2, y=SIZE[1] // 2, r=5):
+    #         self.x = x
+    #         self.y = y
+    #         self.r = r
+    #         self.original_r = r
+    #         self.alpha_layers = FlameParticle.alpha_layer_qty
+    #         self.alpha_glow = FlameParticle.alpha_glow_difference_constant
+    #         max_surf_size = 2 * self.r * self.alpha_layers * self.alpha_layers * self.alpha_glow
+    #         self.surf = pygame.Surface((max_surf_size, max_surf_size), pygame.SRCALPHA)
+    #         self.burn_rate = 0.1 * random.randint(1, 4)
+
+    #     def update(self):
+    #         self.y -= 7 - self.r
+    #         self.x += random.randint(-self.r, self.r)
+    #         self.original_r -= self.burn_rate
+    #         self.r = int(self.original_r)
+    #         if self.r <= 0:
+    #             self.r = 1
+
+    #     def draw(self):
+    #         max_surf_size = 2 * self.r * self.alpha_layers * self.alpha_layers * self.alpha_glow
+    #         self.surf = pygame.Surface((max_surf_size, max_surf_size), pygame.SRCALPHA)
+    #         for i in range(self.alpha_layers, -1, -1):
+    #             alpha = 255 - i * (255 // self.alpha_layers - 5)
+    #             if alpha <= 0:
+    #                 alpha = 0
+    #             radius = self.r * i * i * self.alpha_glow
+    #             if self.r == 4 or self.r == 3:
+    #                 r, g, b = (255, 0, 0)
+    #             elif self.r == 2:
+    #                 r, g, b = (255, 150, 0)
+    #             else:
+    #                 r, g, b = (50, 50, 50)
+    #             # r, g, b = (0, 0, 255)  # uncomment this to make the flame blue
+    #             color = (r, g, b, alpha)
+    #             pygame.draw.circle(self.surf, color, (self.surf.get_width() // 2, self.surf.get_height() // 2), radius)
+    #         screen.blit(self.surf, self.surf.get_rect(center=(self.x, self.y)))
+
+
+    # class Flame:
+    #     def __init__(self, x=SIZE[0] // 2, y=SIZE[1] // 2):
+    #         self.x = x
+    #         self.y = y
+    #         self.flame_intensity = 2
+    #         self.flame_particles = []
+    #         for i in range(self.flame_intensity * 25):
+    #             self.flame_particles.append(FlameParticle(self.x + random.randint(-5, 5), self.y, random.randint(1, 5)))
+
+    #     def draw_flame(self):
+    #         for i in self.flame_particles:
+    #             if i.original_r <= 0:
+    #                 self.flame_particles.remove(i)
+    #                 self.flame_particles.append(FlameParticle(self.x + random.randint(-5, 5), self.y, random.randint(1, 5)))
+    #                 del i
+    #                 continue
+    #             i.update()
+    #             i.draw()
+
+    # flame = Flame()
+
     for i in range(0, result_array.shape[0] + VIDEO_FRAME*3, TICKS_PER_SECOND):
-        screen.blit(background, (0, 0))
+        # screen.blit(background, (0, 0))
+        # flame.draw_flame()
+        screen.fill(BACKGROUND_COLOR)
         start = -15
         for ii in keyboard:
             if ii == 1:
@@ -122,11 +197,11 @@ def video(midi):
                     if keyboard[step] == 0:
                         note_list_on.append(
                             # x, y, key_thick, color
-                            [BAR_X[step], 0, BAR_SIZE[1], GREEN]
+                            [BAR_X[step], 0, BAR_SIZE[1], BLACK_BAR_COLOR]
                         )
                     # white key
                     else:
-                        note_list_on.append([BAR_X[step], 0, BAR_SIZE[0], WHITE])
+                        note_list_on.append([BAR_X[step], 0, BAR_SIZE[0], WHITE_BAR_COLOR])
         
         len_on = len(note_list_on)
         for idx in range(len_on):
@@ -135,8 +210,8 @@ def video(midi):
             if note[1] == SIZE[1] - IMAGE_SIZE[1] - BAR_Y:
                 pygame.draw.rect(
                     screen,
-                    # WHITE if note[2] == 15 else GREEN,
-                    RED,
+                    WHITE_BAR_COLOR if note[2] == 15 else BLACK_BAR_COLOR,
+                    # RED,
                     pygame.Rect(
                         note[0],
                         note[1] + BAR_Y,
@@ -147,13 +222,12 @@ def video(midi):
                 )
             if note[1] < SIZE[1] - IMAGE_SIZE[1]:
                 pygame.draw.rect(
-                    screen, note[3], pygame.Rect(note[0], note[1], note[2], BAR_Y)
+                    screen, note[3], pygame.Rect(note[0], note[1], note[2], BAR_Y), border_radius=1
                 )
                 note_list_on.append([note[0], note[1] + REFRESH_GAP, note[2], note[3]])
 
         pygame.display.flip()
         image_array = pygame.surfarray.array3d(screen)
-        # image shape : [*SIZE, 3]
         image = np.swapaxes(image_array, 0, 1)
         out.write(image)
 
@@ -162,9 +236,10 @@ def video(midi):
     out.release()
     pygame.quit()
 
-    os.system("ffmpeg -i video.mov -vcodec libx264 video.mp4 -y")
-    
+    # os.system("ffmpeg -i video.mov -vcodec libx264 video.mp4 -y")
+    os.system("ffmpeg -ss 0.8 -i ./data/outputs/video.mov -i ./data/outputs/sound.wav -vcodec libx264 ./data/outputs/video.mp4 -y")
+
 if __name__=="__main__":
-    result_array = np.load('./dump.npy')
+    result_array = np.load('./data/outputs/dump.npy')
     video(result_array)
         

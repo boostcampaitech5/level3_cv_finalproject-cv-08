@@ -7,6 +7,7 @@ import ffmpeg
 import streamlit as st
 from music21 import converter
 from streamlit import session_state as state
+import soundfile
 
 from preprocess import preprocess
 from inference import video_to_roll_inference, roll_to_midi_inference
@@ -38,12 +39,13 @@ def process(key):
             
             with st.spinner("Midi Data Inferencing ..."):
                 midi, midi_wav, pm_midi = roll_to_midi_inference(video_info, logit)
-                np.save('./dump.npy', midi)
+                np.save('./data/outputs/dump.npy', midi)
+                soundfile.write("./data/outputs/sound.wav", midi_wav, 16000, format='wav')
             midi_inference_success_msg = st.success("Data Inferenced successfully!")
             
             with st.spinner("Making video ..."):
                 os.system("python game.py")
-                video_file = open("./video.mp4", "rb")
+                video_file = open("./data/outputs/video.mp4", "rb")
                 video_bytes = video_file.read()
             video_inference_success_msg = st.success("Video maked successfully!")
             
