@@ -51,7 +51,7 @@ class CONSTANT:
     RED = [255, 160, 122]
     BLUE = [4, 46, 255]
     SKY = [160, 211, 249]
-
+    
     SIZE = [765, 380]
     SCREEN = pygame.display.set_mode(SIZE, flags=pygame.HIDDEN)
     IMAGE_SIZE = [975, 50]
@@ -106,7 +106,7 @@ class Keyboard:
 
 class baseboard:
     alpha = 128
-    color = {"WHITE": [255, 255, 255, 128], "BLACK": [0, 0, 0, 128]}
+    color = {"WHITE": [255, 255, 255, 128], "BLACK": [0, 0, 0, 220]}
 
     def __init__(self):
         pass
@@ -124,6 +124,14 @@ class baseboard:
                 )
                 CONSTANT.SCREEN.blit(surf, [start, CONSTANT.SIZE[1] - 50])
 
+                pygame.draw.rect(
+                    surf,
+                    CONSTANT.BLACK,
+                    pygame.Rect(0, 0, surf.get_width(), surf.get_height()),
+                    width=1,
+                )
+                CONSTANT.SCREEN.blit(surf, [start, CONSTANT.SIZE[1] - 50])
+                
         start = -15
         for k in CONSTANT.keyboard_coor:
             if k == 1:
@@ -193,9 +201,18 @@ def video(midi):
                 )
                 key.draw()
             if note[1] < CONSTANT.SIZE[1] - CONSTANT.IMAGE_SIZE[1]:
+                surf = pygame.Surface((note[2], CONSTANT.BAR_Y), pygame.SRCALPHA)
                 pygame.draw.rect(
-                    CONSTANT.SCREEN, note[3], pygame.Rect(note[0], note[1], note[2], CONSTANT.BAR_Y), border_radius=1
+                    surf,
+                    note[3] + [int((note[1] + 1) / (CONSTANT.SIZE[1] - CONSTANT.IMAGE_SIZE[1]) * 255)],
+                    # pygame.Rect(note[0], note[1], note[2], BAR_Y),
+                    pygame.Rect(0, 0, note[2], CONSTANT.BAR_Y),
+                    border_radius=1,
                 )
+                CONSTANT.SCREEN.blit(surf, (note[0], note[1]))
+                # pygame.draw.rect(
+                #     CONSTANT.SCREEN, note[3], pygame.Rect(note[0], note[1], note[2], CONSTANT.BAR_Y), border_radius=1
+                # )
                 note_list_on.append([note[0], note[1] + CONSTANT.REFRESH_GAP, note[2], note[3]])
 
         pygame.display.flip()
