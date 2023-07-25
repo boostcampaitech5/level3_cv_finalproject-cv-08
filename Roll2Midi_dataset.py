@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -42,7 +43,7 @@ class Roll2MidiDataset(Dataset):
         self.labels = []
 
         # ground truth midi dir
-        path = self.path + '/midi/'
+        path = os.path.join(self.path, 'midi/')
         print(path)
         train_gt_folders = glob.glob(path + 'training/*')
         train_gt_folders.sort(key=lambda x: int(x.split('/')[-1].split('_')[0]))
