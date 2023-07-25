@@ -2,7 +2,7 @@ name: "streamlit CD action"
 on:
   push:
     branches:
-      - 'khs/streamlit'
+      - 'develop'
       
 jobs:
   build:
@@ -18,8 +18,8 @@ jobs:
           script: |
             cd ${{ github.event.repository.name }}
             poetry shell
-            git checkout khs/streamlit
-            streamlit run game.py --server.port 30007
+            git checkout develop
+            git pull
             
             
     

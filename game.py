@@ -1,6 +1,5 @@
 import pygame
 import mido
-from midi_file import *
 from mido import MidiFile
 import numpy as np
 from collections import deque
