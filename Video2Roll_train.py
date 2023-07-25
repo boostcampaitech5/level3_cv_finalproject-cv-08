@@ -4,7 +4,6 @@ from torch.utils.data import DataLoader
 import torch
 from torch import optim
 import yaml
-
 import os
 
 # import Video2RollNet
@@ -14,11 +13,13 @@ import torch.nn as nn
 from dataset.balance_data import MultilabelBalancedRandomSampler
 
 import dataset
+from dataset import augmentation
 import model
 from easydict import EasyDict
 
 import wandb
 
+import numpy as np
 
 from utils.util import get_current_time, load_config, validate_config
 
@@ -40,13 +41,12 @@ class F1Loss:
         p = tp / (tp + fp+eps)
         r = tp / (tp + fn+eps)
 
-        # f1 = 2*p*r / (p+r+eps)
-        # print(f1.shape)
-        # f1 = torch.nansum(f1) / (torch.sum(~torch.isnan(f1)) + eps)
-        # return 1-f1
-        f1 = 2* (p*r) / (p + r + eps)
-        f1 = f1.clamp(min=eps, max=1-eps)
-        return 1 - f1.mean()
+        f1 = 2*p*r / (p+r+eps)
+        f1 = torch.nansum(f1) / (torch.sum(~torch.isnan(f1)) + eps)
+        return 1-f1
+        # f1 = 2* (p*r) / (p + r + eps)
+        # f1 = f1.clamp(min=eps, max=1-eps)
+        # return 1 - f1.mean()
     
 class Hybrid:
     def __init__(self):
@@ -78,14 +78,22 @@ def main(cfg):
             config=cfg
         )
     
-    train_dataset = getattr(dataset, cfg.train_dataset.type)(**cfg.train_dataset.args, subset="train")
+    if cfg.train_dataset.augmentation is not None:
+        train_transform = getattr(augmentation, cfg.train_dataset.augmentation)()
+    else:
+        train_transform = None
+    
+    train_dataset = getattr(dataset, cfg.train_dataset.type)(**cfg.train_dataset.args, transform=train_transform, subset="train")
     train_sampler = MultilabelBalancedRandomSampler(train_dataset.train_labels)
     train_data_loader = DataLoader(train_dataset, **cfg.train_dataset.loader_args, sampler=train_sampler)
-    # train_data_loader = DataLoader(train_dataset, **cfg.train_dataset.loader_args)
     
     test_data_loader = []
     for test_ds in cfg.test_dataset:
-        test_dataset = getattr(dataset, test_ds.type)(**test_ds.args, subset="test")
+        if test_ds.augmentation is not None:
+            test_transform = getattr(augmentation, test_ds.augmentation)()
+        else:
+            test_transform = None
+        test_dataset = getattr(dataset, test_ds.type)(**test_ds.args, transform=test_transform, subset="test")
         test_data_loader.append(DataLoader(test_dataset, **test_ds.loader_args))
     device = cfg.device
 

@@ -7,13 +7,15 @@ import torchvision.transforms as transforms
 import torch
 from .balance_data import MultilabelBalancedRandomSampler
 # Resize all input images to 1 x 100 x 900
-transform = transforms.Compose([lambda x: x.resize((900,100)),
-                               lambda x: np.reshape(x,(100,900,1)),
-                               lambda x: np.transpose(x,[2,0,1]),
-                               lambda x: x/255.])
+# process = transforms.Compose([lambda x: x.resize((900,100)),
+#                                lambda x: np.reshape(x,(100,900,1)),
+#                                lambda x: np.transpose(x,[2,0,1])])
+
+process = transforms.Compose([lambda x: x.resize((900,100)),
+                              lambda x: np.reshape(x, (100, 900))])
 
 class Video2RollDataset(Dataset):
-    def __init__(self, img_root='../input_images',label_root='./labels', transform = transform, subset='train', min_key=15, max_key=65):
+    def __init__(self, img_root='../input_images',label_root='./labels', transform = None, subset='train', min_key=15, max_key=65):
         self.img_root = img_root #images root dir
         self.label_root = label_root #labels root dir
         self.transform = transform
@@ -38,9 +40,17 @@ class Video2RollDataset(Dataset):
 
         new_input_img_list = []
         for input_img in input_img_list:
-            new_input_img_list.append(self.transform(input_img))
+            input_img = process(input_img)
+            new_input_img_list.append(input_img)
+        if self.transform is not None:
+            new_input_img_list = list(self.transform(image=new_input_img_list[0],
+                                       image1=new_input_img_list[1],
+                                       image2=new_input_img_list[2],
+                                       image3=new_input_img_list[3],
+                                       image4=new_input_img_list[4]).values())
+        new_input_img_list = [img / 255. for img in new_input_img_list]
         # stack 5 consecutive frames
-        final_input_img = np.concatenate(new_input_img_list)
+        final_input_img = np.stack(new_input_img_list)
         torch_input_img = torch.from_numpy(final_input_img).float()
         torch_label = torch.from_numpy(label).float()
 
