@@ -12,7 +12,7 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.STREAMLIT_HOST }}
-          username: ${{ secets.STREAMLIT_USERNAME }}
+          username: ${{ secrets.STREAMLIT_USERNAME }}
           key: ${{ secrets.STREAMLIT_SSHKEY }}
           port: 2242
           script: |
