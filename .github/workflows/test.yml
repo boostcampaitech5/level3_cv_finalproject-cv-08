@@ -11,9 +11,9 @@ jobs:
       - name: execute remote ssh commands using ssh key
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secret.STREAMLIT_HOST }}
-          username: ${{ secret.STREAMLIT_USERNAME }}
-          key: ${{ secret.STREAMLIT_SSHKEY }}
+          host: ${{ secrets.STREAMLIT_HOST }}
+          username: ${{ secets.STREAMLIT_USERNAME }}
+          key: ${{ secrets.STREAMLIT_SSHKEY }}
           port: 2242
           script: |
             #cd ${{ github.event.repository.name }}
