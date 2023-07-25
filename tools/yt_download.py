@@ -31,11 +31,14 @@ if __name__ == '__main__':
         else:
             output_path = os.path.join(args.save_path, "test/")
         try:
-            yt = YouTube(music_link)
-            if args.mode == 'video':
-                yt.streams.filter(mime_type="video/mp4").get_highest_resolution().download(output_path=output_path, filename_prefix=f"{music_idx}_")
-            elif args.mode == 'audio':
-                yt.streams.filter(type="audio").order_by("abr").last().download(output_path=output_path, filename_prefix=f"{music_idx}_")
+            music_link = music_link[1:-1]
+            os.system(f'python -m yt_dlp "{music_link}" --paths "{output_path}" -o "{music_idx}_%(title)s"')
+            # yt = YouTube(music_link, use_oauth=True)
+            # if args.mode == 'video':
+            #     print(yt.streams.filter(mime_type="video/mp4").get_highest_resolution())
+            #     yt.streams.filter(mime_type="video/mp4").get_highest_resolution().download(output_path=output_path, filename_prefix=f"{music_idx}_")
+            # elif args.mode == 'audio':
+            #     yt.streams.filter(type="audio").order_by("abr").last().download(output_path=output_path, filename_prefix=f"{music_idx}_")
         except Exception as ex:
             err_msg = traceback.format_exc()
             print(err_msg)
