@@ -7,6 +7,9 @@ from collections import deque
 from PIL import Image
 import cv2
 import os
+import random
+
+# test url : https://youtu.be/_3qnL9ddHuw
 
 """
 # 120 beat per minute / temp0 : 50,000 microseconds per bit
@@ -40,19 +43,20 @@ import os
 """
 아직 음악 시간이랑 건반 떨어지는 속도를 맞추는 것은 해결하지 못함...    
 """
-
-def video(midi):
-    pygame.init()
-    
+        
+class CONSTANT:
     BLACK = [0, 0, 0]
     WHITE = [255, 255, 255]
     GREEN = [124, 252, 0]
     RED = [255, 160, 122]
+    BLUE = [4, 46, 255]
+    SKY = [160, 211, 249]
 
     SIZE = [765, 380]
+    SCREEN = pygame.display.set_mode(SIZE, flags=pygame.HIDDEN)
     IMAGE_SIZE = [975, 50]
     BAR_SIZE = [15, 10]
-    keyboard = [1, 0, 1] + [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1] * 7 + [1]
+    keyboard_coor = [1, 0, 1] + [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1] * 7 + [1]
     BAR_X = []
     BAR_Y = 15  # 15
     REFRESH_GAP = 15  # 10
@@ -60,16 +64,85 @@ def video(midi):
     TICKS_PER_SECOND = 1
     VIDEO_FRAME = 25
     
-    tmp = -15
-    for k in keyboard:
-        if k == 1:
-            tmp += BAR_SIZE[0]
-            BAR_X.append(tmp)
-        else:
-            BAR_X.append(tmp + 10)
+    WHITE_BAR_COLOR = WHITE
+    BLACK_BAR_COLOR = BLACK
+    BACKGROUND_COLOR = SKY
+    
+tmp = -15
+for k in CONSTANT.keyboard_coor:
+    if k == 1:
+        tmp += CONSTANT.BAR_SIZE[0]
+        CONSTANT.BAR_X.append(tmp)
+    else:
+        CONSTANT.BAR_X.append(tmp + 10)
+        
+class Keyboard:
+    alpha = 128
+    color = {
+        "RED": [255, 160, 122, alpha],
+        "BLUE": [4, 46, 255, alpha],
+        "BLACK": [0, 0, 0, alpha],
+        "WHITE": [255, 255, 255, alpha],
+    }
 
-    background = pygame.image.load("./universe.png")
-    screen = pygame.display.set_mode(SIZE, flags=pygame.HIDDEN)
+    def __init__(self, x, y, color: str, kind: int):
+        self.x = x
+        self.y = y
+        self.kind = kind
+        self.max_surf_size = [[15, 50], [10, 20]]
+        self.surf = pygame.Surface(self.max_surf_size[kind], pygame.SRCALPHA)
+        self.color = Keyboard.color[color]
+
+    def draw(self):
+        pygame.draw.rect(
+            self.surf,
+            self.color,
+            pygame.Rect(0, 0, self.surf.get_width(), self.surf.get_height()),
+        )
+        CONSTANT.SCREEN.blit(self.surf, [self.x, self.y])
+
+    def update(self):
+        pass
+
+class baseboard:
+    alpha = 128
+    color = {"WHITE": [255, 255, 255, 128], "BLACK": [0, 0, 0, 128]}
+
+    def __init__(self):
+        pass
+
+    def draw(self):
+        start = -15
+        for k in CONSTANT.keyboard_coor:
+            if k == 1:
+                start += 15
+                surf = pygame.Surface((CONSTANT.BAR_SIZE[0], 50), pygame.SRCALPHA)
+                pygame.draw.rect(
+                    surf,
+                    baseboard.color["WHITE"],
+                    pygame.Rect(0, 0, CONSTANT.BAR_SIZE[0], 50),
+                )
+                CONSTANT.SCREEN.blit(surf, [start, CONSTANT.SIZE[1] - 50])
+
+        start = -15
+        for k in CONSTANT.keyboard_coor:
+            if k == 1:
+                start += 15
+            else:
+                surf = pygame.Surface((CONSTANT.BAR_SIZE[1], 20), pygame.SRCALPHA)
+                pygame.draw.rect(
+                    surf,
+                    baseboard.color["BLACK"],
+                    pygame.Rect(0, 0, CONSTANT.BAR_SIZE[1], 20),
+                )
+                CONSTANT.SCREEN.blit(surf, [start + 10, CONSTANT.SIZE[1] - 50])
+
+
+
+
+def video(midi):
+    pygame.init()
+    # background = pygame.image.load("./universe.png")
     
     pygame.display.set_caption("Test")
 
@@ -78,38 +151,17 @@ def video(midi):
 
     # midi file 불러오고, numpy로 변경하는 부분
     done = False
-    # midifile = MidiFile("classic.wav.midi", clip=True)
-    # midifile = MidiFile("GT.midi", clip=True)
-    # result_array = mid2arry(midifile)
     result_array = midi
     note_list_on = deque()
 
-    # pathOut = "./video.mov"
-    # out = cv2.VideoWriter(pathOut, cv2.VideoWriter_fourcc(*"mp4v"), 22, SIZE)
-
-    pathOut = "./video.mov"
-    out = cv2.VideoWriter(pathOut, cv2.VideoWriter_fourcc(*"mp4v"), VIDEO_FRAME, SIZE)
-
-    # pygame.mixer.music.load("GT.midi")
-    # pygame.mixer.music.play()
-    for i in range(0, result_array.shape[0] + VIDEO_FRAME*3, TICKS_PER_SECOND):
-        screen.blit(background, (0, 0))
-        start = -15
-        for ii in keyboard:
-            if ii == 1:
-                start += 15
-                pygame.draw.rect(
-                    screen,
-                    WHITE,
-                    pygame.Rect(start, SIZE[1] - 50, BAR_SIZE[0], 50),
-                    width=1,
-                )
-            else:
-                pygame.draw.rect(
-                    screen,
-                    WHITE,
-                    pygame.Rect(start + 10, SIZE[1] - 50, BAR_SIZE[1], 20, width=1),
-                )
+    pathOut = "./data/outputs/video.mov"
+    out = cv2.VideoWriter(pathOut, cv2.VideoWriter_fourcc(*"mp4v"), CONSTANT.VIDEO_FRAME, CONSTANT.SIZE)
+    
+    keyboard = baseboard()
+    for i in range(0, result_array.shape[0] + CONSTANT.VIDEO_FRAME*3, CONSTANT.TICKS_PER_SECOND):
+        CONSTANT.SCREEN.fill(CONSTANT.BACKGROUND_COLOR)
+        
+        keyboard.draw()
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -119,52 +171,47 @@ def video(midi):
             for step, n in enumerate(result_array[i]):
                 if n > 0:
                     # black key
-                    if keyboard[step] == 0:
+                    if CONSTANT.keyboard_coor[step] == 0:
                         note_list_on.append(
                             # x, y, key_thick, color
-                            [BAR_X[step], 0, BAR_SIZE[1], GREEN]
+                            [CONSTANT.BAR_X[step], 0, CONSTANT.BAR_SIZE[1], CONSTANT.BLACK_BAR_COLOR]
                         )
                     # white key
                     else:
-                        note_list_on.append([BAR_X[step], 0, BAR_SIZE[0], WHITE])
+                        note_list_on.append([CONSTANT.BAR_X[step], 0, CONSTANT.BAR_SIZE[0], CONSTANT.WHITE_BAR_COLOR])
         
         len_on = len(note_list_on)
         for idx in range(len_on):
             note = note_list_on.popleft()
             # 피아노 버튼이 눌렸을때 작동하는 로직
-            if note[1] == SIZE[1] - IMAGE_SIZE[1] - BAR_Y:
-                pygame.draw.rect(
-                    screen,
-                    # WHITE if note[2] == 15 else GREEN,
-                    RED,
-                    pygame.Rect(
-                        note[0],
-                        note[1] + BAR_Y,
-                        note[2],
-                        50 if note[2] == 15 else 20,
-                    ),
-                    width=2,
+            if note[1] == CONSTANT.SIZE[1] - CONSTANT.IMAGE_SIZE[1] - CONSTANT.BAR_Y:
+                key = Keyboard(
+                    note[0],
+                    note[1] + CONSTANT.BAR_Y,
+                    "WHITE" if note[2] == 15 else "BLACK",
+                    0 if note[2] == 15 else 1,
                 )
-            if note[1] < SIZE[1] - IMAGE_SIZE[1]:
+                key.draw()
+            if note[1] < CONSTANT.SIZE[1] - CONSTANT.IMAGE_SIZE[1]:
                 pygame.draw.rect(
-                    screen, note[3], pygame.Rect(note[0], note[1], note[2], BAR_Y)
+                    CONSTANT.SCREEN, note[3], pygame.Rect(note[0], note[1], note[2], CONSTANT.BAR_Y), border_radius=1
                 )
-                note_list_on.append([note[0], note[1] + REFRESH_GAP, note[2], note[3]])
+                note_list_on.append([note[0], note[1] + CONSTANT.REFRESH_GAP, note[2], note[3]])
 
         pygame.display.flip()
-        image_array = pygame.surfarray.array3d(screen)
-        # image shape : [*SIZE, 3]
+        image_array = pygame.surfarray.array3d(CONSTANT.SCREEN)
         image = np.swapaxes(image_array, 0, 1)
         out.write(image)
 
-        clock.tick(FRAME)
+        clock.tick(CONSTANT.FRAME)
           
     out.release()
     pygame.quit()
 
-    os.system("ffmpeg -i video.mov -vcodec libx264 video.mp4 -y")
-    
+    # os.system("ffmpeg -i video.mov -vcodec libx264 video.mp4 -y")
+    os.system("ffmpeg -ss 0.8 -i ./data/outputs/video.mov -i ./data/outputs/sound.wav -vcodec libx264 ./data/outputs/video.mp4 -y")
+
 if __name__=="__main__":
-    result_array = np.load('./dump.npy')
+    result_array = np.load('./data/outputs/dump.npy')
     video(result_array)
         
