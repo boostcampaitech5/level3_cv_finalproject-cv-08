@@ -17,6 +17,3 @@ jobs:
           script: |
             cd /opt/ml/level3_cv_finalproject-cv-08
             git checkout develop
-            git branch >> test.txt
-            
-            
