@@ -15,7 +15,7 @@ jobs:
           key: ${{ secrets.STREAMLIT_SSHKEY }}
           port: 2242
           script: |
-            cd level3_cv_finalproject-cv-08
+            cd /opt/ml/level3_cv_finalproject-cv-08
             git checkout develop
             git branch >> test.txt
             
