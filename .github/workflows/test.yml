@@ -1,12 +1,20 @@
-name: "streamlit CD action"
+name: "continuous deploy practice"
 on:
   push:
     branches:
       - 'khs/action'
       
 jobs:
-  print:
+  ssh:
     runs-on: ubuntu-latest
     steps:
-      - name: print variable
-        run: echo ${{ github.event.repository.name }}
+      - uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.STREAMLIT_HOST }}
+          username: ${{ secrets.STREAMLIT_USERNAME }}
+          key: ${{ secrets.STREAMLIT_SSHKEY }}
+          port: 2242
+          script: |
+            cd ~
+            mkdir CD
+            
