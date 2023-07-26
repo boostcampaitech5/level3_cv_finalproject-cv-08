@@ -5,21 +5,8 @@ on:
       - 'khs/action'
       
 jobs:
-  build:
-    runs-on: ubuntu-lastest
+  print:
+    runs-on: lastest-ubuntu
     steps:
-      - name: execute remote ssh commands using ssh key
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.STREAMLIT_HOST }}
-          username: ${{ secrets.STREAMLIT_USERNAME }}
-          key: ${{ secrets.STREAMLIT_SSHKEY }}
-          port: 2242
-          script: |
-            #cd ${{ github.event.repository.name }}
-            cd ~
-            mkdir test
-            
-            
-    
-    
+      - name: print variable
+        run: echo ${{ github.event.repository.name }}
