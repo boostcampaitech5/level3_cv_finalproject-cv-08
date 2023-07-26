@@ -6,7 +6,7 @@ on:
       
 jobs:
   print:
-    runs-on: lastest-ubuntu
+    runs-on: ubuntu-lastest
     steps:
       - name: print variable
         run: echo ${{ github.event.repository.name }}
