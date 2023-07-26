@@ -10,7 +10,7 @@ from models.make_wav import MIDISynth
 
 @st.cache_resource
 def video_to_roll_load_model(device):
-    model_path = "./data/model/video_to_roll_best_f1.pth"
+    model_path = "./data/model/video_to_roll_best_f1_2.pth"
     
     model = resnet18().to(device)
     model.load_state_dict(torch.load(model_path, map_location=device))
@@ -76,7 +76,7 @@ def roll_to_midi_inference(video_info, logit):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     min_key, max_key = 15, 65
-    frame = 50
+    frame = video_info['video_select_frame'] // 2
     input_shape = (1, max_key - min_key + 1, 2 * frame)
     model = roll_to_midi_load_model(device, input_shape)
 

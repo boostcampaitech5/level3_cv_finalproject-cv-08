@@ -49,7 +49,7 @@ class CONSTANT:
     GREEN = [124, 252, 0]
     RED = [255, 160, 122]
     BLUE = [4, 46, 255]
-    SKY = [160, 211, 249]
+    SKY = [128, 128, 128]
 
     SIZE = [765, 380]
     SCREEN = pygame.display.set_mode(SIZE, flags=pygame.HIDDEN)
@@ -75,13 +75,14 @@ for k in CONSTANT.keyboard_coor:
     else:
         CONSTANT.BAR_X.append(tmp + 10)
         
+        
 class Keyboard:
     alpha = 128
     color = {
         "RED": [255, 160, 122, alpha],
         "BLUE": [4, 46, 255, alpha],
-        "BLACK": [0, 0, 0, alpha],
-        "WHITE": [255, 255, 255, alpha],
+        "BLACK": [0, 0, 0, 0],
+        "WHITE": [255, 255, 255, 0],
     }
 
     def __init__(self, x, y, color: str, kind: int):
@@ -103,9 +104,10 @@ class Keyboard:
     def update(self):
         pass
 
+
 class baseboard:
-    alpha = 128
-    color = {"WHITE": [255, 255, 255, 128], "BLACK": [0, 0, 0, 128]}
+    alpha = 255
+    color = {"WHITE": [255, 255, 255, alpha], "BLACK": [0, 0, 0, alpha]}
 
     def __init__(self):
         pass
@@ -137,12 +139,8 @@ class baseboard:
                 CONSTANT.SCREEN.blit(surf, [start + 10, CONSTANT.SIZE[1] - 50])
 
 
-
-
 def video(midi):
     pygame.init()
-    # background = pygame.image.load("./universe.png")
-    
     pygame.display.set_caption("Test")
 
     # 게임 tick설정하는 부분
@@ -208,7 +206,7 @@ def video(midi):
     pygame.quit()
 
     # os.system("ffmpeg -i video.mov -vcodec libx264 video.mp4 -y")
-    os.system("ffmpeg -ss 0.8 -i ./data/outputs/video.mov -i ./data/outputs/sound.wav -vcodec libx264 ./data/outputs/video.mp4 -y")
+    os.system("ffmpeg -ss 0.8 -i ./data/outputs/video.mov -i ./data/outputs/sound.wav -vcodec libx264 ./data/outputs/video.mp4 -y -hide_banner -loglevel error")
 
 if __name__=="__main__":
     result_array = np.load('./data/outputs/dump.npy')

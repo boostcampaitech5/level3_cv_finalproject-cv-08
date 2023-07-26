@@ -5,31 +5,33 @@ from process import process
 
 import streamlit as st
 from streamlit import session_state as state
+from streamlit_option_menu import option_menu
 
 
 # streamlit run frontend.py --server.port 30006 --server.fileWatcherType none
 if __name__ == "__main__":
     
-    st.set_page_config(page_title="Piano To Roll")
+    st.set_page_config(
+        page_title="Vision Music Transcription",
+        page_icon="musical_keyboard")
     
     # session.state
-    if "tab_url" not in state: state.tab_url = None
-    if "tab_video" not in state: state.tab_video = None
-
-    # if "input_url" not in state: state.input_url = None
     if "prev_url" not in state: state.prev_url = None
-    if "input_video" not in state: state.input_video = None
+    if "prev_video" not in state: state.prev_video = None
+    if "url_input" not in state: state.url_input = None
+    if "video_input" not in state: state.video_input = None
     
-    if "input_video" not in state: state.input_video = None
     if "roll" not in state: state.roll = None
     if "roll_wav" not in state: state.roll_wav = None
     if "midi" not in state: state.midi = None
     if "midi_wav" not in state: state.midi_wav = None
-    if "submit" not in state: state.submit = False
-
-    st.header("Inference")    
-    st.subheader("How to upload ?")
     
+    if "submit" not in state: state.submit = False
+    if "sheet" not in state: state.sheet = False
+    if "sheet_file" not in state: state.sheet_file = False
+
+    st.header(":musical_keyboard: Vision Music Transcription")
+    st.subheader("How do you want to upload it?")
     st.markdown(
         """
         <style>
@@ -37,24 +39,44 @@ if __name__ == "__main__":
             height: 80px;
             padding: 1rem;
         }
-        </style>         
+        
+        button[class*="css-7ym5gk"] {
+            width: 130px;
+        }
+        
+        div[class*="stCheckbox"] {
+            padding-top: 7px;
+        }
+        
+        div[class*="css-y4bq5x"] {
+            width: 180px;
+        }
+        </style>
         """, unsafe_allow_html=True)
+    
+    with st.sidebar:
+        st.image("./data/piano.jpg")
+        st.title(":raised_hand_with_fingers_splayed: 하이부스트캠프 :raised_hand_with_fingers_splayed:")
+        st.markdown("## Overview")
+        st.markdown("## Run")
     
     tab_url, tab_video = st.tabs([":link: URL", ":film_frames: VIDEO"])
         
     with tab_url:
         # https://youtu.be/_3qnL9ddHuw
         # https://www.youtube.com/watch?v=ZHCjU_rcQno
-        input_url = st.text_input(label="URL", placeholder="📂 Input youtube url here (ex. https://youtu.be/...)")
+        state.url_input = st.text_input(label="URL", placeholder="📂 Input youtube url here (ex. https://youtu.be/...)")
         
-        if input_url:
-            if validators.url(input_url):
+        if state.url_input:
+            state.video_bytes = None
+            state.sheet_file = False
+            if validators.url(state.url_input):
                 try:
-                    if state.prev_url != input_url:
-                        state.prev_url = input_url
-                        state.submit = False
+                    if state.prev_url != state.url_input:                        
+                        state.prev_url = state.url_input
+                        state.submit, state.sheet = False, False
                         with st.spinner("Url Analyzing ..."):
-                            yt = YouTube(input_url)
+                            yt = YouTube(state.url_input)
                             yt.streams.filter(file_extension="mp4", res="720p").order_by("resolution").desc().first().download(output_path="./data/inference", filename="01.mp4")
                 except Exception as e:
                     print(e)
@@ -65,11 +87,16 @@ if __name__ == "__main__":
                 st.error("Please input url !")
             
     with tab_video:
-        input_video = st.file_uploader(label="VIDEO", type=["mp4", "wav", "avi"])
+        state.video_input = st.file_uploader(label="VIDEO", type=["mp4", "wav", "avi"])
 
-        if input_video:
-            with open("./data/inference/02.mp4", "wb") as f:
-                f.write(input_video.getbuffer())
+        if state.video_input:
+            state.video_bytes = None
+            state.sheet_file = False
+            if state.prev_video != state.video_input:
+                state.prev_video = state.video_input
+                state.submit, state.sheet = False, False
+                with open("./data/inference/02.mp4", "wb") as f:
+                    f.write(state.video_input.getbuffer())
 
             process(key='video')
                 
