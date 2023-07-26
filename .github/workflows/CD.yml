@@ -1,0 +1,20 @@
+name: "continuous deploy practice"
+on:
+  push:
+    branches:
+      - 'develop'
+      
+jobs:
+  ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.STREAMLIT_HOST }}
+          username: ${{ secrets.STREAMLIT_USERNAME }}
+          key: ${{ secrets.STREAMLIT_SSHKEY }}
+          port: 2242
+          script: |
+            cd /opt/ml/level3_cv_finalproject-cv-08
+            git checkout develop
+            git pull
