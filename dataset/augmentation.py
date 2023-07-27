@@ -37,7 +37,45 @@ class DummyAugmentation(BaseAugmentation):
         return [
             A.RandomBrightnessContrast(brightness_limit=[1.0, 1.0], contrast_limit=[1.0, 1.0], p=self.p)
         ]
+    
+class Normalize(BaseAugmentation):
+    def __init__(self, p=1):
+        super(Normalize, self).__init__(p)
+    
+    def get_transform_list(self):
+        return [
+            A.Normalize(mean=0.5, std=0.2, p=1.0)
+        ]
 
+class EraseHalfTop(BaseAugmentation):
+    def __init__(self, p=1.0):
+        super(EraseHalfTop, self).__init__(p)
+    
+    def get_transform_list(self):
+        return [
+            ImgCutTop(p=self.p)
+        ]
+    
+# class CropHalfTop(BaseAugmentation):
+#     def __init__(self, p=1.0):
+#         super(CropHalfTop, self).__init__(p)
+    
+#     def get_transform_list(self):
+#         return [
+#             TopCrop(p=self.p),
+#             A.resize(100, 900, always_apply=True)
+#         ]
+    
+class TopCrop(ImageOnlyTransform):
+    def __init__(self, always_apply=False, p=1):
+        super(TopCrop, self).__init__(always_apply, p)
+    
+    def apply(self, img, **params):
+        transformed_img = img.copy()
+        transformed_img = transformed_img[50:, :]
+
+        return transformed_img
+    
 class ImgCutTop(ImageOnlyTransform):    
     def __init__(self, always_apply=False, p=1):
         super(ImgCutTop, self).__init__(always_apply, p)
