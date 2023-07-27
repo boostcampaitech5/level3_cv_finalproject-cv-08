@@ -33,9 +33,9 @@ def process(key):
         with col1: 
             submit = st.form_submit_button(label="Submit")
         with col3:
-            origin = st.checkbox(label="Origin Video", key=f'{key}_origin_checkbox')
+            origin = st.checkbox(label="Original Video", key=f'{key}_origin_checkbox')
         with col4:
-            maked = st.checkbox(label="Maked Video", key=f'{key}_maked_checkbox')
+            maked = st.checkbox(label="Visualization", key=f'{key}_maked_checkbox')
         with col5: 
             sheet = st.checkbox(label="Sheet Music", value=True, disabled=True, key=f'{key}_sheet_checkbox')
     
@@ -87,10 +87,10 @@ def process(key):
                     st.video(state.video_input, format="video/mp4")
         
         if maked:   
-            with st.expander(":film_frames: Maked Video"):
+            with st.expander(":film_frames: Output Video"):
                 st.video(state.video_bytes, format="video/mp4")
         else:
-            with st.expander(":loud_sound: Maked Audio"):
+            with st.expander(":loud_sound: Output Audio"):
                 st.audio(state.audio_bytes, sample_rate=16000)
 
     if sheet and submit:

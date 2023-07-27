@@ -5,7 +5,6 @@ from process import process
 
 import streamlit as st
 from streamlit import session_state as state
-from streamlit_option_menu import option_menu
 
 
 # streamlit run frontend.py --server.port 30006 --server.fileWatcherType none
@@ -13,7 +12,7 @@ from streamlit_option_menu import option_menu
 if __name__ == "__main__":
     
     st.set_page_config(
-        page_title="Vision Music Transcription",
+        page_title="Music Transcription from Silent Videos",
         page_icon="musical_keyboard")
     
     # session.state
@@ -31,8 +30,8 @@ if __name__ == "__main__":
     if "sheet" not in state: state.sheet = False
     if "sheet_file" not in state: state.sheet_file = False
 
-    st.header(":musical_keyboard: Vision Music Transcription")
-    st.subheader("How do you want to upload it?")
+    st.header(":musical_keyboard: Music Transcription from Silent Videos")
+    st.subheader("How do you want to upload the video?")
     st.markdown(
         """
         <style>
