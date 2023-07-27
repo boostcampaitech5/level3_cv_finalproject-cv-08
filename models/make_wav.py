@@ -3,12 +3,12 @@ import pretty_midi
 
 # Synthesizing Audio using Fluid Synth
 class MIDISynth():
-    def __init__(self, roll, midi, frame, is_midi=False):
+    def __init__(self, roll, midi, frame, ins, is_midi=False):
         self.frame = frame
         self.piano_keys = 88
         self.spf = 0.04 # second per frame
         self.sample_rate = 16000
-        self.ins = 'Acoustic Grand Piano'
+        self.ins = ins
 
         self.roll = roll
         self.midi = midi
