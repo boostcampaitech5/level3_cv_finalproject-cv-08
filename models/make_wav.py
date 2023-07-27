@@ -97,7 +97,7 @@ class MIDISynth():
                     end = np.append(end, tmp.shape)
                 merged_list = [(start[i], end[i]) for i in range(0, len(start))]
                 # 21 is the lowest piano key in the Midi note number (Midi has 128 notes)
-                self.w_Roll2Midi_notes[36 + i] = merged_list
+                self.w_Roll2Midi_notes[39 + i] = merged_list
         else:
             self.wo_Roll2Midi_notes = {}
             for i in range(self.complete_wo_Roll2Midi_onset.shape[0]):
@@ -107,7 +107,7 @@ class MIDISynth():
                 if len(start)!=len(end):
                     end = np.append(end, tmp.shape)
                 merged_list = [(start[i], end[i]) for i in range(0, len(start))]
-                self.wo_Roll2Midi_notes[36 + i] = merged_list
+                self.wo_Roll2Midi_notes[39 + i] = merged_list
             
         
     def generate_midi(self):
