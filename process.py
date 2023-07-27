@@ -29,16 +29,23 @@ def process(key):
         video_info['video_select_range'] = st.slider(label="Select video range (second)", min_value=0, max_value=int(float(video_info['video_duration'])), step=10, value=(50, min(int(float(video_info['video_duration'])), 100)), key=f'{key}_silder')
         video_info['video_select_frame'] = video_info['video_select_range'][1] * video_info['video_fps'] - video_info['video_select_range'][0] * video_info['video_fps']
 
-        col1, _, col3, col4, col5 = st.columns(5)
-        with col1: 
-            submit = st.form_submit_button(label="Submit")
-        with col3:
+        col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+
+        with col1:
+            instrument = st.selectbox(
+                    'Select Instrument',
+                    ('Acoustic Grand Piano', 'Bright Acoustic Piano', 'Electric Grand Piano', 'Glockenspiel'
+                     'Accordion', 'Acoustic Guitar (nylon)', 'Fretless Bass', 'Celesta', 'Xylophone', 'Violin', 'Cello', 'Flute',
+                     'Trombone', ))
+        with col2:
             origin = st.checkbox(label="Original Video", key=f'{key}_origin_checkbox')
-        with col4:
+        with col3:
             maked = st.checkbox(label="Visualization", key=f'{key}_maked_checkbox')
-        with col5: 
+        with col4: 
             sheet = st.checkbox(label="Sheet Music", value=True, disabled=True, key=f'{key}_sheet_checkbox')
-    
+
+        submit = st.form_submit_button(label="Submit")
+        
         if submit:
             state.submit = True
             
@@ -47,13 +54,13 @@ def process(key):
             preprocess_success_msg = st.success("Data has been successfully preprocessed!")
             
             with st.spinner("Roll Data Inference in Progress..."):
-                roll, logit, pm_wav, pm_roll = video_to_roll_inference(video_info, frames_with5)
+                roll, logit, pm_wav, pm_roll = video_to_roll_inference(video_info, frames_with5, instrument)
                 np.save('./data/outputs/dump.npy', roll)
                 soundfile.write("./data/outputs/sound.wav", pm_wav, 16000, format='wav')
             roll_inference_success_msg = st.success("Piano roll has been successfully inferenced!")
             
             with st.spinner("Roll Data Postprocess in Progress..."):
-                midi, midi_wav, pm_midi = roll_to_midi_inference(video_info, logit)
+                midi, midi_wav, pm_midi = roll_to_midi_inference(video_info, logit, instrument)
             midi_inference_success_msg = st.success("Piano roll has been successfully postprocessed!")
             
             if maked:
@@ -71,8 +78,8 @@ def process(key):
             preprocess_success_msg.empty()
             time.sleep(0.2)
             roll_inference_success_msg.empty()
-            # time.sleep(0.2)
-            # midi_inference_success_msg.empty()
+            time.sleep(0.2)
+            midi_inference_success_msg.empty()
             
             if maked:
                 time.sleep(0.2)

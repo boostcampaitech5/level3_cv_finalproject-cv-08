@@ -51,6 +51,11 @@ if __name__ == "__main__":
         div[class*="css-y4bq5x"] {
             width: 180px;
         }
+        
+        div[class*="css-j5r0tf"]{
+            margin: auto;
+        }
+        
         </style>
         """, unsafe_allow_html=True)
     

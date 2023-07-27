@@ -30,7 +30,7 @@ def roll_to_midi_load_model(device, input_shape):
     return model
 
 
-def video_to_roll_inference(video_info, frames_with5):
+def video_to_roll_inference(video_info, frames_with5, instrument):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = video_to_roll_load_model(device)
     
@@ -68,11 +68,11 @@ def video_to_roll_inference(video_info, frames_with5):
     logit = np.zeros((video_info['video_select_frame'], 88))
     logit[:, min_key:max_key+1] = preds_logit
     
-    wav, pm = MIDISynth(roll=roll, midi=None, frame=video_info['video_select_frame'], is_midi=False).process_roll()
+    wav, pm = MIDISynth(roll=roll, midi=None, frame=video_info['video_select_frame'], ins=instrument, is_midi=False).process_roll()
 
     return roll, logit, wav, pm
 
-def roll_to_midi_inference(video_info, logit):
+def roll_to_midi_inference(video_info, logit, instrument):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     min_key, max_key = 15, 65
@@ -109,6 +109,6 @@ def roll_to_midi_inference(video_info, logit):
             results.append(numpy_pre_label[frame:, :])
     
     midi = np.concatenate(results, axis=0)
-    wav, pm = MIDISynth(roll=None, midi=midi, frame=midi.shape[0], is_midi=True).process_midi()
+    wav, pm = MIDISynth(roll=None, midi=midi, frame=midi.shape[0], ins=instrument, is_midi=True).process_midi()
     
     return midi, wav, pm
