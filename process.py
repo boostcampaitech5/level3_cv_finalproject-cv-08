@@ -33,9 +33,9 @@ def process(key):
         with col1: 
             submit = st.form_submit_button(label="Submit")
         with col3:
-            origin = st.checkbox(label="Origin Video", key=f'{key}_origin_checkbox')
+            origin = st.checkbox(label="Original Video", key=f'{key}_origin_checkbox')
         with col4:
-            maked = st.checkbox(label="Maked Video", key=f'{key}_maked_checkbox')
+            maked = st.checkbox(label="Visualization", key=f'{key}_maked_checkbox')
         with col5: 
             sheet = st.checkbox(label="Sheet Music", value=True, disabled=True, key=f'{key}_sheet_checkbox')
     
