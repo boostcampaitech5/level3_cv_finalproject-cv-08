@@ -2120,6 +2120,53 @@ watchdog = {version = "*", markers = "platform_system != \"Darwin\""}
 snowflake = ["snowflake-snowpark-python"]
 
 [[package]]
+name = "streamlit-ext"
+version = "0.1.7"
+description = "Small handy widgets for streamlit, e.g. download button which won't cause rerun, set page width"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "streamlit-ext-0.1.7.tar.gz", hash = "sha256:9f0c59caa670ec6bd026449740f9b8d4b861677b00f0007e1da1d862199ee3b4"},
+    {file = "streamlit_ext-0.1.7-py3-none-any.whl", hash = "sha256:842b6e4d789cd714e1c54a7bdc524c058b545ef1b494cfb67bbddc4cf21b01ac"},
+]
+
+[package.dependencies]
+packaging = "*"
+streamlit = "*"
+
+[package.extras]
+dev = ["black (>=22.6.0)", "flake8 (>=4.0,<5.0)", "isort (>=5.10.1)", "mypy", "pandas-stubs (>=1.4.3)"]
+test = ["openpyxl", "pandas", "pytest (>=7.1)", "pytest-cov (>=3.0.0)"]
+
+[[package]]
+name = "streamlit-option-menu"
+version = "0.3.6"
+description = "streamlit-option-menu is a simple Streamlit component that allows users to select a single item from a list of options in a menu."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "streamlit-option-menu-0.3.6.tar.gz", hash = "sha256:4f02faadf4d1d1e9a00c3740a2ebd8a3f105a2cdf63fdc0e34cf01ef7267e9de"},
+    {file = "streamlit_option_menu-0.3.6-py3-none-any.whl", hash = "sha256:d051af217ff1e4513e2cc6f3c79ccd4b34d77390b16c34711032e998d41e9850"},
+]
+
+[package.dependencies]
+streamlit = ">=0.63"
+
+[[package]]
+name = "streamlit-player"
+version = "0.1.5"
+description = "A streamlit component to embed video and music players from various websites."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "streamlit-player-0.1.5.tar.gz", hash = "sha256:7f27688fbdf6e385fd277cca00196e51a6e5cda7fc7c1a08098b0108508f5d0e"},
+    {file = "streamlit_player-0.1.5-py3-none-any.whl", hash = "sha256:69d635630293f0538983abbfb561feb31d3a11f1442ccf1d92c42303adfa8ff6"},
+]
+
+[package.dependencies]
+streamlit = ">=0.73"
+
+[[package]]
 name = "tenacity"
 version = "8.2.2"
 description = "Retry code until it succeeds"
@@ -2434,4 +2481,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.5,<3.9.7"
-content-hash = "fa1f4fd274dbd5000c274337ba5a2f2e82f3eb8c5a748bb668a8b8b35f0dd559"
+content-hash = "4cf7fc754ac4b6b8f4dd345e3604f3274b9d0ba28b4410821ce197f152d8526b"

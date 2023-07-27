@@ -47,13 +47,13 @@ def process(key):
             preprocess_success_msg = st.success("Data has been successfully preprocessed!")
             
             with st.spinner("Roll Data Inference in Progress..."):
-                _, logit, _, pm_roll = video_to_roll_inference(video_info, frames_with5)
+                roll, logit, pm_wav, pm_roll = video_to_roll_inference(video_info, frames_with5)
+                np.save('./data/outputs/dump.npy', roll)
+                soundfile.write("./data/outputs/sound.wav", pm_wav, 16000, format='wav')
             roll_inference_success_msg = st.success("Piano roll has been successfully inferenced!")
             
             with st.spinner("Roll Data Postprocess in Progress..."):
                 midi, midi_wav, pm_midi = roll_to_midi_inference(video_info, logit)
-                np.save('./data/outputs/dump.npy', midi)
-                soundfile.write("./data/outputs/sound.wav", midi_wav, 16000, format='wav')
             midi_inference_success_msg = st.success("Piano roll has been successfully postprocessed!")
             
             if maked:
@@ -71,8 +71,8 @@ def process(key):
             preprocess_success_msg.empty()
             time.sleep(0.2)
             roll_inference_success_msg.empty()
-            time.sleep(0.2)
-            midi_inference_success_msg.empty()
+            # time.sleep(0.2)
+            # midi_inference_success_msg.empty()
             
             if maked:
                 time.sleep(0.2)
