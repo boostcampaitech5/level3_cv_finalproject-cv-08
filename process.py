@@ -1,34 +1,45 @@
 import os
+import cv2
 import glob
-import math
 import time
 import numpy as np
-import ffmpeg
-import streamlit as st
-from music21 import converter, stream, chord, clef, instrument
-
-from streamlit import session_state as state
 import soundfile
+from music21 import converter
+
+import streamlit as st
+import streamlit_ext as ste
+from streamlit import session_state as state
+from streamlit_player import st_player
 
 from preprocess import preprocess
 from inference import video_to_roll_inference, roll_to_midi_inference
 
-from generate_score import generate_score, generate_two_hand_score
+from generate_score import generate_score
 
 def process(key):
     if key == 'url': video_path = "./data/inference/01.mp4"
     else: video_path = "./data/inference/02.mp4"
     
-    probe = ffmpeg.probe(video_path)
-    video_info = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)      
+    video_info = dict()
+    cap = cv2.VideoCapture(video_path)
+    video_info['video_fps'] = int(cap.get(cv2.CAP_PROP_FPS))
+    video_info['video_duration'] = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) / video_info['video_fps'])
     
-    video_info['video_fps'] = int(math.ceil(int(video_info['r_frame_rate'].split('/')[0]) / int(video_info['r_frame_rate'].split('/')[1])))
-    video_info['video_select_range'] = st.slider(label="Select video range (second)", min_value=0, max_value=int(float(video_info['duration'])), step=10, value=(50, min(int(float(video_info['duration'])), 100)), key=f'{key}_silder')
-    video_info['video_select_frame'] = video_info['video_select_range'][1] * video_info['video_fps'] - video_info['video_select_range'][0] * video_info['video_fps']
+    with st.form(f"{key}_select_range_form"):
+        video_info['video_select_range'] = st.slider(label="Select video range (second)", min_value=0, max_value=int(float(video_info['video_duration'])), step=10, value=(50, min(int(float(video_info['video_duration'])), 100)), key=f'{key}_silder')
+        video_info['video_select_frame'] = video_info['video_select_range'][1] * video_info['video_fps'] - video_info['video_select_range'][0] * video_info['video_fps']
+
+        col1, _, col3, col4, col5 = st.columns(5)
+        with col1: 
+            submit = st.form_submit_button(label="Submit")
+        with col3:
+            origin = st.checkbox(label="Origin Video", key=f'{key}_origin_checkbox')
+        with col4:
+            maked = st.checkbox(label="Maked Video", key=f'{key}_maked_checkbox')
+        with col5: 
+            sheet = st.checkbox(label="Sheet Music", value=True, disabled=True, key=f'{key}_sheet_checkbox')
     
-    url_submit = st.button(label="Submit", key=f'{key}_button')
-    if url_submit or state.submit:
-        if url_submit:
+        if submit:
             state.submit = True
             
             with st.spinner("Data Preprocess in Progress..."):
@@ -36,7 +47,7 @@ def process(key):
             preprocess_success_msg = st.success("Data has been successfully preprocessed!")
             
             with st.spinner("Roll Data Inference in Progress..."):
-                roll, logit, roll_wav, pm_roll = video_to_roll_inference(video_info, frames_with5)
+                _, logit, _, pm_roll = video_to_roll_inference(video_info, frames_with5)
             roll_inference_success_msg = st.success("Piano roll has been successfully inferenced!")
             
             with st.spinner("Roll Data Postprocess in Progress..."):
@@ -45,62 +56,82 @@ def process(key):
                 soundfile.write("./data/outputs/sound.wav", midi_wav, 16000, format='wav')
             midi_inference_success_msg = st.success("Piano roll has been successfully postprocessed!")
             
-            with st.spinner("Generating video ..."):
-                os.system("python game.py")
-                video_file = open("./data/outputs/video.mp4", "rb")
-                video_bytes = video_file.read()
-            video_inference_success_msg = st.success("Video created successfully!")
+            if maked:
+                with st.spinner("Generating video ..."):
+                    os.system("python game.py")
+                    video_file = open("./data/outputs/video.mp4", "rb")
+                    video_bytes = video_file.read()
+                video_inference_success_msg = st.success("Video created successfully!")
+                
+                state.video_bytes = video_bytes
+            else:
+                state.audio_bytes = midi_wav
             
-            state.roll, state.midi = roll, midi
-            state.roll_wav, state.midi_wav = roll_wav, midi_wav
-            state.video_bytes = video_bytes
-            
-            time.sleep(1)
+            time.sleep(0.2)
             preprocess_success_msg.empty()
-            time.sleep(0.5)
+            time.sleep(0.2)
             roll_inference_success_msg.empty()
-            time.sleep(0.5)
+            time.sleep(0.2)
             midi_inference_success_msg.empty()
-            time.sleep(0.5)
-            video_inference_success_msg.empty()
-        
-        # st.image(np.rot90(state.roll, 1), width=700)
-        # st.audio(state.midi_wav, sample_rate=16000)
-        st.video(state.video_bytes, format="video/mp4")
-        
-        if url_submit:
-            with st.spinner("Generating Music Score..."):
-                output_dir = "./data/outputs"
-                os.makedirs(output_dir, exist_ok=True)
-                output_roll_midi_path = os.path.join(output_dir, "pm_roll.midi")
-                output_midi_path = os.path.join(output_dir, "pm.midi")
-                pm_roll.write(output_roll_midi_path)
-                pm_midi.write(output_midi_path)
-                                
-                score = generate_score(output_roll_midi_path)
+            
+            if maked:
+                time.sleep(0.2)
+                video_inference_success_msg.empty()
 
-                roll_pdf = os.path.join(output_dir, "roll_sheet")
-                roll_png = os.path.join(output_dir, "roll_sheet")
-                
-                converter.subConverters.ConverterLilypond().write(score, fmt='png', fp=roll_png, subformats='png')
-                converter.subConverters.ConverterLilypond().write(score, fmt='pdf', fp=roll_pdf, subformats='pdf')
-                
-                for file in glob.glob(output_dir + "/*"):
-                    if "png" not in file and "pdf" not in file:
-                        os.remove(file)
+    if state.submit:
+        if origin:
+            with st.expander(":film_projector: Origin Video"):
+                if key == 'url':
+                    st_player(state.url_input, key="youtube_player")
+                else:
+                    st.video(state.video_input, format="video/mp4")
+        
+        if maked:   
+            with st.expander(":film_frames: Maked Video"):
+                st.video(state.video_bytes, format="video/mp4")
+        else:
+            with st.expander(":loud_sound: Maked Audio"):
+                st.audio(state.audio_bytes, sample_rate=16000)
 
-        with st.expander(":musical_note: Sheet Music"):
+    if sheet and submit:
+        state.sheet = True
+        with st.spinner("Generating Music Score..."):
+            output_dir = "./data/outputs"
+            os.makedirs(output_dir, exist_ok=True)
+            
+            output_roll_midi_path = os.path.join(output_dir, "pm_roll.midi")
+            output_midi_path = os.path.join(output_dir, "pm.midi")
+            
+            pm_roll.write(output_roll_midi_path)
+            pm_midi.write(output_midi_path)
+                            
+            score = generate_score(output_roll_midi_path)
+
+            roll_pdf = os.path.join(output_dir, "roll_sheet")
+            roll_png = os.path.join(output_dir, "roll_sheet")
+            
+            converter.subConverters.ConverterLilypond().write(score, fmt='png', fp=roll_png, subformats='png')
+            converter.subConverters.ConverterLilypond().write(score, fmt='pdf', fp=roll_pdf, subformats='pdf')
+            
+            state.sheet_file = True
+            
+            for file in glob.glob(output_dir + "/*"):
+                if "png" not in file and "pdf" not in file:
+                    os.remove(file)
+
+    if state.sheet and state.sheet_file:
+        with st.expander(":musical_note: Sheet Music"):            
             st.image("./data/outputs/roll_sheet.png")
-            col1, col2, _, _ = st.columns(4)
+            col1, col2, _, _, _ = st.columns(5)
             with col1:
-                state.download_click = st.download_button(
+                state.download_click = ste.download_button(
                     label="pdf download",
                     data=open("./data/outputs/roll_sheet.pdf", 'rb').read(),
                     file_name="piano_sheet.pdf",
                     mime="application/pdf"
                 )
             with col2:
-                state.download_click = st.download_button(
+                state.download_click = ste.download_button(
                     label="png download",
                     data=open("./data/outputs/roll_sheet.png", 'rb').read(),
                     file_name="piano_sheet.png",

@@ -78,6 +78,7 @@ for k in CONSTANT.keyboard_coor:
     else:
         CONSTANT.BAR_X.append(tmp + 10)
         
+        
 class Keyboard:
     color = {
         "RED": [255, 160, 122, CONSTANT.MATCH_KEYBOARD_ALPHA],
@@ -105,6 +106,7 @@ class Keyboard:
 
     def update(self):
         pass
+
 
 class baseboard:
     alpha = 128
@@ -146,8 +148,6 @@ class baseboard:
                     pygame.Rect(0, 0, CONSTANT.BAR_SIZE[1], 20),
                 )
                 CONSTANT.SCREEN.blit(surf, [start + 10, CONSTANT.SIZE[1] - 50])
-
-
 
 
 def video(midi):
@@ -224,7 +224,7 @@ def video(midi):
     pygame.quit()
 
     # os.system("ffmpeg -i video.mov -vcodec libx264 video.mp4 -y")
-    os.system("ffmpeg -ss 0.8 -i ./data/outputs/video.mov -i ./data/outputs/sound.wav -vcodec libx264 ./data/outputs/video.mp4 -y")
+    os.system("ffmpeg -ss 0.8 -i ./data/outputs/video.mov -i ./data/outputs/sound.wav -vcodec libx264 ./data/outputs/video.mp4 -y -hide_banner -loglevel error")
 
 if __name__=="__main__":
     result_array = np.load('./data/outputs/dump.npy')
