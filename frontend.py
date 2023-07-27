@@ -5,7 +5,6 @@ from process import process
 
 import streamlit as st
 from streamlit import session_state as state
-from streamlit_option_menu import option_menu
 
 
 # streamlit run frontend.py --server.port 30006 --server.fileWatcherType none

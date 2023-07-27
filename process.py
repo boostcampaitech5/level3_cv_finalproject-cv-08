@@ -87,10 +87,10 @@ def process(key):
                     st.video(state.video_input, format="video/mp4")
         
         if maked:   
-            with st.expander(":film_frames: Maked Video"):
+            with st.expander(":film_frames: Output Video"):
                 st.video(state.video_bytes, format="video/mp4")
         else:
-            with st.expander(":loud_sound: Maked Audio"):
+            with st.expander(":loud_sound: Output Audio"):
                 st.audio(state.audio_bytes, sample_rate=16000)
 
     if sheet and submit:
