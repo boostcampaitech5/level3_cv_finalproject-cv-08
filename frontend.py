@@ -9,6 +9,7 @@ from streamlit_option_menu import option_menu
 
 
 # streamlit run frontend.py --server.port 30006 --server.fileWatcherType none
+# https://www.youtube.com/watch?v=4VR-6AS0-l4
 if __name__ == "__main__":
     
     st.set_page_config(
@@ -54,17 +55,9 @@ if __name__ == "__main__":
         </style>
         """, unsafe_allow_html=True)
     
-    with st.sidebar:
-        st.image("./data/piano.jpg")
-        st.title(":raised_hand_with_fingers_splayed: 하이부스트캠프 :raised_hand_with_fingers_splayed:")
-        st.markdown("## Overview")
-        st.markdown("## Run")
-    
     tab_url, tab_video = st.tabs([":link: URL", ":film_frames: VIDEO"])
         
     with tab_url:
-        # https://youtu.be/_3qnL9ddHuw
-        # https://www.youtube.com/watch?v=ZHCjU_rcQno
         state.url_input = st.text_input(label="URL", placeholder="📂 Input youtube url here (ex. https://youtu.be/...)")
         
         if state.url_input:
