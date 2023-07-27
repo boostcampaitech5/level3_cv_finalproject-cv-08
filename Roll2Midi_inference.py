@@ -7,7 +7,7 @@ import glob
 from Roll2MidiNet import Generator
 from torch.autograd import Variable
 torch.cuda.set_device(0)
-cuda = torch.device("cuda")
+cuda = torch.device("cuda:1")
 print(torch.cuda.current_device())
 Tensor = torch.cuda.FloatTensor
 class Midi_Generation():
@@ -23,8 +23,8 @@ class Midi_Generation():
         # Midi output dir
         self.infer_out_dir = infer_out_dir
 
-        self.min_key = 0
-        self.max_key = 84
+        self.min_key = 3
+        self.max_key = 83
         self.frame = 50
         self.process_est_roll(self.est_roll_folder)
 
@@ -97,6 +97,7 @@ if __name__ == "__main__":
     # example for generating the Midi output from training Roll predictions
     est_roll_folder = args.roll_path
     exp_dir = os.path.abspath('./Audeo/Audeo_github/Roll2Midi_models/Roll2Midi_model')
+    # exp_dir = os.path.abspath('./Audeo/Correct_Roll2Midi_experiments/Correct_Roll2MidiNet')
     with open(os.path.join(exp_dir,'hyperparams.json'), 'r') as hpfile:
         hp = json.load(hpfile)
     print("the best loss:", hp['best_loss'])

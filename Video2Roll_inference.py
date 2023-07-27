@@ -6,14 +6,16 @@ import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
 import torch
+from torch import nn
 transform = transforms.Compose([lambda x: x.resize((900,100)),
                                lambda x: np.reshape(x,(100,900,1)),
                                lambda x: np.transpose(x,[2,0,1]),
                                lambda x: x/255.])
 
 # the range of Piano keys (maximum is 88), depending on your data
-min_key = 0
-max_key = 84
+min_key = 3
+max_key = 83
+device = "cuda:1"
 
 def load_data(img_folder, label_file):
     img_files = glob.glob(img_folder + '/*.png')
@@ -47,7 +49,7 @@ def inference(net, data, est_roll_folder):
             file_list, label = frame
             torch_input_img = torch_preprocess(file_list)
             logits = net(torch.unsqueeze(torch_input_img,dim=0))
-            pred_label = torch.sigmoid(logits) >= 0.5
+            pred_label = torch.sigmoid(logits) >= 0.4
             numpy_pre_label = pred_label.cpu().detach().numpy().astype(int)
             numpy_logit = logits.cpu().detach().numpy()
             save_est_roll.append(numpy_pre_label)
@@ -75,27 +77,31 @@ def torch_preprocess(input_file_list):
     for input_img in input_img_list:
         new_input_img_list.append(transform(input_img))
     final_input_img = np.concatenate(new_input_img_list)
-    torch_input_img = torch.from_numpy(final_input_img).float().cuda()
+    torch_input_img = torch.from_numpy(final_input_img).float().to(device)
     return torch_input_img
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--img_root", type=str, default="../data/ytdataset/images/", help="default: '../data/ytdataset/images/'")
-    parser.add_argument("--label_root", type=str, default='../ytdataset/labels_audeo/', help="default: '../data/ytdataset/labels_audeo/'")
+    parser.add_argument("--img_root", type=str, default="./data/ytdataset/images_nopad/testing", help="default: './data/ytdataset/images_nopad/testing'")
+    parser.add_argument("--label_root", type=str, default='./data/ytdataset/labels_audeo/testing', help="default: './data/ytdataset/labels_audeo/testing'")
     parser.add_argument("--output_path", type=str, default='./outputs_test/v2r_output/', help="default: './outputs_test/v2r_output/'")
     parser.add_argument("--iter", action="store_true")
     parser.add_argument("--video_name", type=str)
 
     args = parser.parse_args()
 
-    model_path = './Audeo/models/Video2Roll_best_0.616.pth' # change to your path
-    # model_path = "./experiments/4_2023-07-06 13:19:20/Video2Roll.pth"
-    device = torch.device('cuda:0')
+    # model_path = './Audeo/models/Video2Roll_best_0.616.pth' # change to your path
+    model_path = "./experiments/85_2023-07-25 18:57:08_rousseau_twofc/Video2Roll_bestf1.pth"
+    device = torch.device(device)
     net = Video2RollNet(num_classes=max_key-min_key+1)
-    net.cuda()
-    net.load_state_dict(torch.load(model_path, map_location='cuda:0'))
+    net.fc = nn.Sequential(
+        nn.Linear(128, 128),
+        nn.Linear(128, max_key-min_key+1),
+    )
+    net.to(device)
+    net.load_state_dict(torch.load(model_path, map_location=device))
     
     # video images root dir, change to your path
     img_root=args.img_root
@@ -110,7 +116,7 @@ if __name__ == "__main__":
             # video_name = f'100_Paul Rice “Waltz for Ella” FREE SHEET MUSIC P Barton FEURICH piano.mp4'
             img_folder = os.path.join(img_root, video_name)
             label_folder = os.path.join(label_root, video_name+'.pkl')
-            est_roll_folder = os.path.join(est_roll_root + video_name)
+            est_roll_folder = os.path.join(est_roll_root, video_name)
             print("save file in:", est_roll_folder)
             os.makedirs(est_roll_folder, exist_ok=True)
             data = load_data(img_folder, label_folder)

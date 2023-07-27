@@ -39,9 +39,9 @@ class hyperparams(object):
         self.best_epoch = 0
 
 def process_data():
-    train_dataset = Roll2MidiDataset(path="../ytdataset", est_roll_path="./outputs_test/", train=True)
+    train_dataset = Roll2MidiDataset(path="./data/ytdataset/", est_roll_path="./data/v2r_inputs/", train=True)
     train_loader = utils.DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=8)
-    test_dataset = Roll2MidiDataset(path="../ytdataset", est_roll_path="./outputs_test/", train=False)
+    test_dataset = Roll2MidiDataset(path="./data/ytdataset/", est_roll_path="./data/v2r_inputs/", train=False)
     test_loader = utils.DataLoader(test_dataset, batch_size=16, num_workers=8)
     return train_loader, test_loader
 

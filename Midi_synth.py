@@ -14,7 +14,7 @@ class MIDISynth():
         # synthsized output dir, change to your own path
         self.syn_dir = out_path
         self.min_key = 3
-        self.max_key = 84
+        self.max_key = 83
         self.frame = 50
         self.piano_keys = 88
         if self.midi:
