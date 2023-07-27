@@ -208,7 +208,7 @@ server_training/wandb/
 server_training/keyboard_det/
 server_training/experiment.ipynb
 server_training/outputs/
-server_training/CorrectRoll2Midi_experiments/
+server_training/Correct_Roll2Midi_experiments/
 server_training/atlantic_convert.ipynb
 server_training/inference_all.sh
 server_training/Untitled.ipynb

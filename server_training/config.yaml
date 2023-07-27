@@ -1,4 +1,4 @@
-device: cuda:1
+device: cuda:0
 epochs: 100
 model:
   args:
@@ -17,32 +17,42 @@ test_dataset:
     label_root: ./data/rousseau/labels_align
     max_key: 83
     min_key: 3
+  augmentation: null
   loader_args:
     batch_size: 64
     num_workers: 16
   type: Video2RollDataset
-  augmentation: DummyAugmentation
 - args:
     img_root: ./data/kassia/images
     label_root: ./data/kassia/labels
     max_key: 83
     min_key: 3
+  augmentation: null
   loader_args:
     batch_size: 64
     num_workers: 16
   type: Video2RollDataset
-  augmentation: null
-train_dataset:
-  args:
-    img_root: ./data/rousseau/images_align
-    label_root: ./data/rousseau/labels_align
+- args:
+    img_root: ./data/ytdataset/images_nopad
+    label_root: ./data/ytdataset/labels_audeo
     max_key: 83
     min_key: 3
+  augmentation: null
   loader_args:
     batch_size: 64
     num_workers: 16
   type: Video2RollDataset
-  augmentation: DummyAugmentation
+train_dataset:
+  args:
+    img_root: ./data/train_customrousseau/images
+    label_root: ./data/train_customrousseau/labels
+    max_key: 83
+    min_key: 3
+  augmentation: null
+  loader_args:
+    batch_size: 64
+    num_workers: 16
+  type: Video2RollDataset
 wandb:
-  run_name: test-augtest
-  use: false
+  run_name: customdata_with_rousseau
+  use: true
