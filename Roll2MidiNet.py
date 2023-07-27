@@ -1,6 +1,8 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch
+
+
 ##############################
 #           U-NET
 ##############################
@@ -42,7 +44,7 @@ class UNetUp(nn.Module):
 class Generator(nn.Module):
     def __init__(self, input_shape):
         super(Generator, self).__init__()
-        channels, _ , _ = input_shape
+        channels, _, _ = input_shape
         self.down1 = UNetDown(channels, 64, normalize=False)
         self.down2 = UNetDown(64, 128)
         self.down3 = UNetDown(128, 256, dropout=0.5)
@@ -51,10 +53,10 @@ class Generator(nn.Module):
         self.down6 = UNetDown(1024, 1024, dropout=0.5)
 
         self.up1 = UNetUp(1024, 512, dropout=0.5)
-        self.up2 = UNetUp(1024+512, 256, dropout=0.5)
-        self.up3 = UNetUp(512+256, 128, dropout=0.5)
-        self.up4 = UNetUp(256+128, 64)
-        self.up5 = UNetUp(128+64, 16)
+        self.up2 = UNetUp(1024 + 512, 256, dropout=0.5)
+        self.up3 = UNetUp(512 + 256, 128, dropout=0.5)
+        self.up4 = UNetUp(256 + 128, 64)
+        self.up5 = UNetUp(128 + 64, 16)
         self.conv1d = nn.Conv2d(80, 1, kernel_size=1)
 
     def forward(self, x):
@@ -91,10 +93,10 @@ class Discriminator(nn.Module):
     def __init__(self, input_shape):
         super(Discriminator, self).__init__()
 
-        channels, height, width = input_shape #1 51 50
+        channels, height, width = input_shape  # 1 51 50
 
         # Calculate output of image discriminator (PatchGAN)
-        patch_h, patch_w = int(height / 2 ** 3)+1, int(width / 2 ** 3)+1
+        patch_h, patch_w = int(height / 2**3) + 1, int(width / 2**3) + 1
         self.output_shape = (1, patch_h, patch_w)
 
         def discriminator_block(in_filters, out_filters, stride, normalize):
@@ -107,7 +109,12 @@ class Discriminator(nn.Module):
 
         layers = []
         in_filters = channels
-        for out_filters, stride, normalize in [(64, 2, False), (128, 2, True), (256, 2, True), (512, 1, True)]:
+        for out_filters, stride, normalize in [
+            (64, 2, False),
+            (128, 2, True),
+            (256, 2, True),
+            (512, 1, True),
+        ]:
             layers.extend(discriminator_block(in_filters, out_filters, stride, normalize))
             in_filters = out_filters
 
@@ -118,6 +125,7 @@ class Discriminator(nn.Module):
     def forward(self, img):
         return self.model(img)
 
+
 def weights_init_normal(m):
     classname = m.__class__.__name__
     if classname.find("Conv") != -1:
@@ -126,14 +134,14 @@ def weights_init_normal(m):
         torch.nn.init.normal_(m.weight.data, 1.0, 0.02)
         torch.nn.init.constant_(m.bias.data, 0.0)
 
+
 if __name__ == "__main__":
-    input_shape = (1,51, 100)
+    input_shape = (1, 51, 100)
     gnet = Generator(input_shape)
     dnet = Discriminator(input_shape)
     print(dnet.output_shape)
-    imgs = torch.rand((64,1,51,100))
+    imgs = torch.rand((64, 1, 51, 100))
     gen = gnet(imgs)
     print(gen.shape)
     dis = dnet(gen)
     print(dis.shape)
-

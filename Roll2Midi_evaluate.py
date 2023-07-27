@@ -1,21 +1,29 @@
-import os
 import json
-from Roll2Midi_dataset import Roll2MidiDataset
-from sklearn import metrics
-import torch.utils.data as utils
-import torch
-from Roll2MidiNet import Generator
-from torch.autograd import Variable
+import os
+
 import numpy as np
+import torch
+import torch.utils.data as utils
+from sklearn import metrics
 from sklearn.metrics import _classification
+from torch.autograd import Variable
+
+from Roll2Midi_dataset import Roll2MidiDataset
+from Roll2MidiNet import Generator
+
 cuda = torch.device("cuda")
 Tensor = torch.cuda.FloatTensor
+
+
 def process_data():
-    test_dataset = Roll2MidiDataset(path="../ytdataset", est_roll_path="./outputs_test/", train=False)
+    test_dataset = Roll2MidiDataset(
+        path="../ytdataset", est_roll_path="./outputs_test/", train=False
+    )
     test_loader = utils.DataLoader(test_dataset, batch_size=16)
     return test_loader
 
-def test(generator,  test_loader):
+
+def test(generator, test_loader):
     all_label = []
     all_pred_label = []
     all_pred_label_ = []
@@ -32,11 +40,11 @@ def test(generator,  test_loader):
             gen_imgs = generator(roll_)
 
             pred_label = gen_imgs >= 0.4
-            numpy_label = gt.cpu().detach().numpy().astype(int) # B,1, 51, 50
+            numpy_label = gt.cpu().detach().numpy().astype(int)  # B,1, 51, 50
             numpy_label = np.transpose(numpy_label.squeeze(), (0, 2, 1))  # B,50,51
             numpy_label = np.reshape(numpy_label, (-1, 85))
             numpy_pre_label = pred_label.cpu().detach().numpy().astype(int)
-            numpy_pre_label = np.transpose(numpy_pre_label.squeeze(), (0, 2, 1)) #B,50,51
+            numpy_pre_label = np.transpose(numpy_pre_label.squeeze(), (0, 2, 1))  # B,50,51
             numpy_pre_label = np.reshape(numpy_pre_label, (-1, 85))
             all_label.append(numpy_label)
             all_pred_label.append(numpy_pre_label)
@@ -49,41 +57,62 @@ def test(generator,  test_loader):
 
         all_label = np.vstack(all_label)
         all_pred_label = np.vstack(all_pred_label)
-        labels = _classification._check_set_wise_labels(all_label, all_pred_label, labels=None, pos_label=1,
-                                                        average='samples')
-        MCM = metrics.multilabel_confusion_matrix(all_label, all_pred_label, sample_weight=None, labels=labels,
-                                                  samplewise=True)
+        labels = _classification._check_set_wise_labels(
+            all_label, all_pred_label, labels=None, pos_label=1, average="samples"
+        )
+        MCM = metrics.multilabel_confusion_matrix(
+            all_label, all_pred_label, sample_weight=None, labels=labels, samplewise=True
+        )
         tp_sum = MCM[:, 1, 1]
         fp_sum = MCM[:, 0, 1]
         fn_sum = MCM[:, 1, 0]
         # tn_sum = MCM[:, 0, 0]
         accuracy = _prf_divide(tp_sum, tp_sum + fp_sum + fn_sum, zero_division=1)
         accuracy = np.average(accuracy)
-        all_precision = metrics.precision_score(all_label, all_pred_label, average='samples', zero_division=1)
-        all_recall = metrics.recall_score(all_label, all_pred_label, average='samples', zero_division=1)
-        all_f1_score = metrics.f1_score(all_label, all_pred_label, average='samples', zero_division=1)
+        all_precision = metrics.precision_score(
+            all_label, all_pred_label, average="samples", zero_division=1
+        )
+        all_recall = metrics.recall_score(
+            all_label, all_pred_label, average="samples", zero_division=1
+        )
+        all_f1_score = metrics.f1_score(
+            all_label, all_pred_label, average="samples", zero_division=1
+        )
         print(
             "Threshold 0.4, avg precision:{0:.3f} | avg recall:{1:.3f} | avg acc:{2:.3f} | f1 score:{3:.3f}".format(
-                 all_precision, all_recall, accuracy, all_f1_score))
+                all_precision, all_recall, accuracy, all_f1_score
+            )
+        )
 
         all_pred_label_ = np.vstack(all_pred_label_)
-        labels = _classification._check_set_wise_labels(all_label, all_pred_label_, labels=None, pos_label=1,
-                                                        average='samples')
-        MCM = metrics.multilabel_confusion_matrix(all_label, all_pred_label_, sample_weight=None, labels=labels,
-                                                  samplewise=True)
+        labels = _classification._check_set_wise_labels(
+            all_label, all_pred_label_, labels=None, pos_label=1, average="samples"
+        )
+        MCM = metrics.multilabel_confusion_matrix(
+            all_label, all_pred_label_, sample_weight=None, labels=labels, samplewise=True
+        )
         tp_sum = MCM[:, 1, 1]
         fp_sum = MCM[:, 0, 1]
         fn_sum = MCM[:, 1, 0]
         # tn_sum = MCM[:, 0, 0]
         accuracy = _prf_divide(tp_sum, tp_sum + fp_sum + fn_sum, zero_division=1)
         accuracy = np.average(accuracy)
-        all_precision = metrics.precision_score(all_label, all_pred_label_, average='samples', zero_division=1)
-        all_recall = metrics.recall_score(all_label, all_pred_label_, average='samples', zero_division=1)
-        all_f1_score = metrics.f1_score(all_label, all_pred_label_, average='samples', zero_division=1)
+        all_precision = metrics.precision_score(
+            all_label, all_pred_label_, average="samples", zero_division=1
+        )
+        all_recall = metrics.recall_score(
+            all_label, all_pred_label_, average="samples", zero_division=1
+        )
+        all_f1_score = metrics.f1_score(
+            all_label, all_pred_label_, average="samples", zero_division=1
+        )
         print(
             "Threshold 0.5,  avg precision:{0:.3f} | avg recall:{1:.3f} | avg acc:{2:.3f} | f1 score:{3:.3f}".format(
-                all_precision, all_recall,accuracy, all_f1_score))
+                all_precision, all_recall, accuracy, all_f1_score
+            )
+        )
         return
+
 
 def _prf_divide(numerator, denominator, zero_division="warn"):
     """Performs division and handles divide-by-zero.
@@ -110,17 +139,18 @@ def _prf_divide(numerator, denominator, zero_division="warn"):
     if zero_division != "warn":
         return result
 
+
 if __name__ == "__main__":
-    est_midi_folder = './outputs_test/'
-    exp_dir = os.path.join(os.path.abspath('./Audeo_github/Roll2Midi_models'), 'Roll2Midi_model')
-    with open(os.path.join(exp_dir,'hyperparams.json'), 'r') as hpfile:
+    est_midi_folder = "./outputs_test/"
+    exp_dir = os.path.join(os.path.abspath("./Audeo_github/Roll2Midi_models"), "Roll2Midi_model")
+    with open(os.path.join(exp_dir, "hyperparams.json"), "r") as hpfile:
         hp = json.load(hpfile)
-    print(hp['best_loss'])
-    print(hp['best_epoch'])
-    checkpoints = 'checkpoint-{}.tar'.format(hp['best_epoch'])
+    print(hp["best_loss"])
+    print(hp["best_epoch"])
+    checkpoints = "checkpoint-{}.tar".format(hp["best_epoch"])
     checkpoint = torch.load(os.path.join(exp_dir, checkpoints))
     test_loader = process_data()
     input_shape = (1, 85, 100)
     model = Generator(input_shape).cuda()
-    model.load_state_dict(checkpoint['state_dict_G'])
+    model.load_state_dict(checkpoint["state_dict_G"])
     test(model, test_loader)

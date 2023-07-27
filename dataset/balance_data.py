@@ -2,7 +2,9 @@ import random
 import numpy as np
 import torch
 from torch.utils.data.sampler import Sampler
+
 # torch.cuda.set_device(1)
+
 
 class MultilabelBalancedRandomSampler(Sampler):
     """
@@ -41,11 +43,11 @@ class MultilabelBalancedRandomSampler(Sampler):
             if not np.any(labels[row]):
                 all_zero.append(row)
 
-        print("all zero sample number is: ",len(all_zero))
+        print("all zero sample number is: ", len(all_zero))
         self.map.append(all_zero)
         print("counting-----")
         for i in range(len(self.map)):
-            print("class {0} has {1} samples:".format(i,len(self.map[i])))
+            print("class {0} has {1} samples:".format(i, len(self.map[i])))
 
         assert class_choice in ["random", "cycle"]
         self.class_choice = class_choice
@@ -64,7 +66,7 @@ class MultilabelBalancedRandomSampler(Sampler):
 
     def sample(self):
         if self.class_choice == "random":
-            class_ = random.randint(0, self.labels.shape[1])# - 1)
+            class_ = random.randint(0, self.labels.shape[1])  # - 1)
             # print(class_)
         elif self.class_choice == "cycle":
             class_ = self.current_class
@@ -75,6 +77,7 @@ class MultilabelBalancedRandomSampler(Sampler):
     def __len__(self):
         return 20000
         # return len(self.indices)
+
 
 # if __name__ == "__main__":
 #     train_dataset = Video2RollDataset(subset='train')

@@ -18,7 +18,7 @@ def main(args):
 
     img_dir_list = sorted(os.listdir(image_path))
     img_dir_list = [os.path.join(image_path, filename) for filename in img_dir_list]
-    
+
     fps = 25
     A1 = 21
 
@@ -27,24 +27,24 @@ def main(args):
     for filename in tqdm(img_dir_list):
         img_len = len(os.listdir(filename))
         filename_withoutdir = filename.split("/")[-1]
-        
+
         # pianoyt
         img_id = filename_withoutdir.split("_")[0]
-        mid = MidiFile(os.path.join(midi_path, f'audio_{img_id}.0.midi'))
-        
-        #miditest
+        mid = MidiFile(os.path.join(midi_path, f"audio_{img_id}.0.midi"))
+
+        # miditest
         # img_id = filename_withoutdir.split(".")[0]
         # mid = MidiFile(os.path.join(midi_path, f'{img_id}.mid'))
         time_sum = 0
-        
+
         if args.dataset_mode == "pianoyt":
             bpm = mido.tempo2bpm(mid.tracks[0][0].tempo)
             bps = bpm / 60.0
             sec_per_tick = mid.ticks_per_beat * bps
             midi_tracks = mid.tracks[1]
-            
+
             np_roll = np.zeros((img_len, 88))
-        
+
             time_sum = 0
 
             for msg in midi_tracks:
@@ -62,12 +62,19 @@ def main(args):
             for msg in midi_tracks:
                 if hasattr(msg, "note"):
                     if msg.velocity != 0:
-                        processed_midi.append({"note": msg.note, "velocity": msg.velocity, "start": msg.time, "end": -1})
+                        processed_midi.append(
+                            {
+                                "note": msg.note,
+                                "velocity": msg.velocity,
+                                "start": msg.time,
+                                "end": -1,
+                            }
+                        )
                     else:
                         is_note_end = False
                         for midi_line in processed_midi:
-                            if midi_line['note'] == msg.note and midi_line['end'] == -1:
-                                midi_line['end'] = msg.time - 1 # 두 note가 붙어버리는 것을 방지
+                            if midi_line["note"] == msg.note and midi_line["end"] == -1:
+                                midi_line["end"] = msg.time - 1  # 두 note가 붙어버리는 것을 방지
                                 is_note_end = True
                                 break
                         if not is_note_end:
@@ -75,9 +82,9 @@ def main(args):
         elif args.dataset_mode == "of":
             sec_per_tick = 960.0
             midi_tracks = mid.tracks[0]
-            
+
             np_roll = np.zeros((img_len, 88))
-        
+
             time_sum = 0
 
             for msg in midi_tracks:
@@ -95,32 +102,41 @@ def main(args):
             for msg in midi_tracks:
                 if hasattr(msg, "note"):
                     if msg.type == "note_on":
-                        processed_midi.append({"note": msg.note, "velocity": msg.velocity, "start": msg.time, "end": -1})
+                        processed_midi.append(
+                            {
+                                "note": msg.note,
+                                "velocity": msg.velocity,
+                                "start": msg.time,
+                                "end": -1,
+                            }
+                        )
                     else:
                         is_note_end = False
                         for midi_line in processed_midi:
-                            if midi_line['note'] == msg.note and midi_line['end'] == -1:
-                                midi_line['end'] = msg.time if midi_line['start'] == msg.time - 1 else msg.time - 1# 두 note가 붙어버리는 것을 방지
+                            if midi_line["note"] == msg.note and midi_line["end"] == -1:
+                                midi_line["end"] = (
+                                    msg.time if midi_line["start"] == msg.time - 1 else msg.time - 1
+                                )  # 두 note가 붙어버리는 것을 방지
                                 is_note_end = True
                                 break
                         if not is_note_end:
                             raise Exception
-                            
+
         midi_dict = {}
 
-        for i in range(1, img_len+1):
+        for i in range(1, img_len + 1):
             midi_dict[i] = np.zeros(88)
 
         if args.onset_mode:
             for midi_line in processed_midi:
                 np_midi_line = np.zeros(88)
-                np_midi_line[midi_line['note']] = midi_line['velocity']
-                midi_dict[midi_line['start']] += np_midi_line
+                np_midi_line[midi_line["note"]] = midi_line["velocity"]
+                midi_dict[midi_line["start"]] += np_midi_line
         else:
             for midi_line in processed_midi:
-                for frame in range(midi_line['start'], midi_line['end']):
+                for frame in range(midi_line["start"], midi_line["end"]):
                     np_midi_line = np.zeros(88)
-                    np_midi_line[midi_line['note']] = midi_line['velocity']
+                    np_midi_line[midi_line["note"]] = midi_line["velocity"]
                     midi_dict[frame] += np_midi_line
 
         with open(os.path.join(save_path, filename_withoutdir + ".pkl"), "wb") as f:
@@ -134,20 +150,42 @@ def main(args):
 
         for i in range(50, label_stack.shape[0], 50):
             os.makedirs(os.path.join(args.save_midi_path, filename_withoutdir), exist_ok=True)
-            np.savez(os.path.join(args.save_midi_path, filename_withoutdir, f"{i-50+1}-{i+1}.npz"), midi=label_stack[i-50:i])
+            np.savez(
+                os.path.join(args.save_midi_path, filename_withoutdir, f"{i-50+1}-{i+1}.npz"),
+                midi=label_stack[i - 50 : i],
+            )
 
-        
-        
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    
-    parser.add_argument("--original_label_path", type=str, default='../data/PianoYT/pianoyt_MIDI/', help='default: "../data/PianoYT/pianoyt_MIDI/"')
-    parser.add_argument("--image_path", type=str, default='../data/ytdataset/images/training/', help="default: '../data/ytdataset/images/training/")
-    parser.add_argument("--save_label_path", type=str, default="../data/ytdataset/labels_audeo/training/", help='default : "../data/ytdataset/labels_audeo/training/"')
-    parser.add_argument("--save_midi_path", type=str, default="../data/ytdataset/midi/training/", help='default: "../data/ytdataset/midi/training/"')
+
+    parser.add_argument(
+        "--original_label_path",
+        type=str,
+        default="../data/PianoYT/pianoyt_MIDI/",
+        help='default: "../data/PianoYT/pianoyt_MIDI/"',
+    )
+    parser.add_argument(
+        "--image_path",
+        type=str,
+        default="../data/ytdataset/images/training/",
+        help="default: '../data/ytdataset/images/training/",
+    )
+    parser.add_argument(
+        "--save_label_path",
+        type=str,
+        default="../data/ytdataset/labels_audeo/training/",
+        help='default : "../data/ytdataset/labels_audeo/training/"',
+    )
+    parser.add_argument(
+        "--save_midi_path",
+        type=str,
+        default="../data/ytdataset/midi/training/",
+        help='default: "../data/ytdataset/midi/training/"',
+    )
     parser.add_argument("--onset_mode", action="store_true")
-    parser.add_argument("--dataset_mode", type=str, default="pianoyt", help='[pianoyt, of]')
-    
+    parser.add_argument("--dataset_mode", type=str, default="pianoyt", help="[pianoyt, of]")
+
     args = parser.parse_args()
-    
+
     main(args)

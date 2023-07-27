@@ -1,17 +1,21 @@
-from model import Video2RollNet
-import os
 import glob
-import numpy as np
-from PIL import Image
-import torchvision.transforms as transforms
-from dataset import Video2RollDataset
-from torch.utils.data import DataLoader
-import torch
+import os
 import time
+
+import numpy as np
+import torch
+import torch.nn as nn
+import torchvision.transforms as transforms
+from PIL import Image
 from sklearn import metrics
 from sklearn.metrics import _classification
-import torch.nn as nn
+from torch.utils.data import DataLoader
 from tqdm import tqdm
+
+from dataset import Video2RollDataset
+from model import Video2RollNet
+
+
 def validate(net, criterion, test_loader):
     epoch_loss = 0
     count = 0
@@ -32,18 +36,24 @@ def validate(net, criterion, test_loader):
             count += 1
     all_label = np.vstack(all_label)
     all_pred_label = np.vstack(all_pred_label)
-    labels = _classification._check_set_wise_labels(all_label, all_pred_label,labels=None, pos_label=1, average='samples')
-    MCM = metrics.multilabel_confusion_matrix(all_label, all_pred_label,sample_weight=None, labels=labels, samplewise=True)
+    labels = _classification._check_set_wise_labels(
+        all_label, all_pred_label, labels=None, pos_label=1, average="samples"
+    )
+    MCM = metrics.multilabel_confusion_matrix(
+        all_label, all_pred_label, sample_weight=None, labels=labels, samplewise=True
+    )
     tp_sum = MCM[:, 1, 1]
     fp_sum = MCM[:, 0, 1]
     fn_sum = MCM[:, 1, 0]
     # tn_sum = MCM[:, 0, 0]
-    accuracy = _prf_divide(tp_sum, tp_sum+fp_sum+fn_sum, zero_division=1)
+    accuracy = _prf_divide(tp_sum, tp_sum + fp_sum + fn_sum, zero_division=1)
     accuracy = np.average(accuracy)
-    all_precision = metrics.precision_score(all_label, all_pred_label, average='samples', zero_division=1)
-    all_recall = metrics.recall_score(all_label, all_pred_label, average='samples', zero_division=1)
-    all_f1_score = metrics.f1_score(all_label, all_pred_label, average='samples', zero_division=1)
-    return epoch_loss/count, all_precision, all_recall, accuracy, all_f1_score
+    all_precision = metrics.precision_score(
+        all_label, all_pred_label, average="samples", zero_division=1
+    )
+    all_recall = metrics.recall_score(all_label, all_pred_label, average="samples", zero_division=1)
+    all_f1_score = metrics.f1_score(all_label, all_pred_label, average="samples", zero_division=1)
+    return epoch_loss / count, all_precision, all_recall, accuracy, all_f1_score
 
 
 def _prf_divide(numerator, denominator, zero_division="warn"):
@@ -71,23 +81,34 @@ def _prf_divide(numerator, denominator, zero_division="warn"):
     if zero_division != "warn":
         return result
 
+
 if __name__ == "__main__":
     # model_path = './models/BCE_5f_FAN.pth'
     model_path = "./Audeo/models/Video2Roll_best_0.616.pth"
-    device = torch.device('cuda')
+    device = torch.device("cuda")
     net = Video2RollNet(num_classes=85)
     # net = torch.nn.DataParallel(net)
     net.cuda()
     net.load_state_dict(torch.load(model_path))
     print(net)
-    test_dataset = Video2RollDataset("./data/MIDItest/images", "./data/MIDItest/labels", min_key=0, max_key=84, subset='test')
+    test_dataset = Video2RollDataset(
+        "./data/bommelpiano/images",
+        "./data/bommelpiano/labels",
+        min_key=0,
+        max_key=84,
+        subset="train",
+    )
     test_data_loader = DataLoader(test_dataset, batch_size=64, num_workers=8)
     net.eval()
-    criterion=nn.BCEWithLogitsLoss()
-    val_avg_loss, val_avg_precision, val_avg_recall, val_avg_acc, val_fscore = validate(net, criterion, test_data_loader)
+    criterion = nn.BCEWithLogitsLoss()
+    val_avg_loss, val_avg_precision, val_avg_recall, val_avg_acc, val_fscore = validate(
+        net, criterion, test_data_loader
+    )
     epoch = 0
-    print('-' * 85)
+    print("-" * 85)
     print(
         "epoch {0} validation loss:{1:.3f} | avg precision:{2:.3f} | avg recall:{3:.3f} | avg acc:{4:.3f} | f1 score:{5:.3f}".format(
-            epoch + 1, val_avg_loss, val_avg_precision, val_avg_recall, val_avg_acc, val_fscore))
-    print('-' * 85)
+            epoch + 1, val_avg_loss, val_avg_precision, val_avg_recall, val_avg_acc, val_fscore
+        )
+    )
+    print("-" * 85)

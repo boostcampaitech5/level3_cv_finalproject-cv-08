@@ -5,9 +5,18 @@ import torch.nn.functional as F
 import torch
 from .swin_backbone import SwinTransformer
 
+
 class Video2RollNet_swin(nn.Module):
     # original default params of top_channel_nums, reduced_channel_nums are 2048, 256
-    def __init__(self, block=BasicBlock, layers=[2, 2, 2, 2], top_channel_nums=512, reduced_channel_nums=64, num_classes=51, scale=1):
+    def __init__(
+        self,
+        block=BasicBlock,
+        layers=[2, 2, 2, 2],
+        top_channel_nums=512,
+        reduced_channel_nums=64,
+        num_classes=51,
+        scale=1,
+    ):
         self.inplanes = 64
         super(Video2RollNet_swin, self).__init__()
 
@@ -21,10 +30,11 @@ class Video2RollNet_swin(nn.Module):
         self.FTB4 = FTB(768, 192)
         self.FRB4 = FRB(96, 192)
 
-
-        #FPN PARTS
+        # FPN PARTS
         # Top layer
-        self.toplayer = nn.Conv2d(top_channel_nums, reduced_channel_nums, kernel_size=1, stride=1, padding=0)  # Reduce channels,
+        self.toplayer = nn.Conv2d(
+            top_channel_nums, reduced_channel_nums, kernel_size=1, stride=1, padding=0
+        )  # Reduce channels,
         self.toplayer_bn = nn.BatchNorm2d(reduced_channel_nums)
         self.toplayer_relu = nn.ReLU(inplace=True)
 
@@ -34,21 +44,25 @@ class Video2RollNet_swin(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
+                m.weight.data.normal_(0, math.sqrt(2.0 / n))
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
-                
-        self.backbone = SwinTransformer(in_chans=5, use_checkpoint=True)
-        self.backbone.init_weights(pretrained="https://github.com/SwinTransformer/storage/releases/download/v1.0.8/swin_tiny_patch4_window7_224_22k.pth")
+
+        self.backbone = SwinTransformer(in_chans=3, use_checkpoint=True)
+        self.backbone.init_weights(
+            pretrained="https://github.com/SwinTransformer/storage/releases/download/v1.0.8/swin_tiny_patch4_window7_224_22k.pth"
+        )
+
+        self.backbone.patch_embed.proj = nn.Conv2d(5, 96, kernel_size=(4, 4), stride=(4, 4))
 
     def _upsample(self, x, y, scale=1):
         _, _, H, W = y.size()
-        return F.upsample(x, size=(H // scale, W // scale), mode='bilinear')
+        return F.upsample(x, size=(H // scale, W // scale), mode="bilinear")
 
     def _upsample_add(self, x, y):
         _, _, H, W = y.size()
-        return F.upsample(x, size=(H, W), mode='bilinear') + y
+        return F.upsample(x, size=(H, W), mode="bilinear") + y
 
     def forward(self, x):
         h = x
@@ -72,11 +86,11 @@ class Video2RollNet_swin(nn.Module):
 
         p2 = self.FRB2(x2_, p3)
 
-        out1 = p2*p3
+        out1 = p2 * p3
 
-        out1_ = F.softmax(out1.view(*out1.size()[:2], -1),dim=2).view_as(out1)
+        out1_ = F.softmax(out1.view(*out1.size()[:2], -1), dim=2).view_as(out1)
 
-        out2 = out1_*p4
+        out2 = out1_ * p4
 
         out2 = self.conv2(out2)
 
