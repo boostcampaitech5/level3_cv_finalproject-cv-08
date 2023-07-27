@@ -50,6 +50,9 @@ class CONSTANT:
     RED = [255, 160, 122]
     BLUE = [4, 46, 255]
     SKY = [160, 211, 249]
+    GRAY = [128, 128, 128]
+    BASE_KEYBOARD_ALPHA = 255
+    MATCH_KEYBOARD_ALPHA = 128
     
     SIZE = [765, 380]
     SCREEN = pygame.display.set_mode(SIZE, flags=pygame.HIDDEN)
@@ -65,7 +68,7 @@ class CONSTANT:
     
     WHITE_BAR_COLOR = WHITE
     BLACK_BAR_COLOR = BLACK
-    BACKGROUND_COLOR = SKY
+    BACKGROUND_COLOR = GRAY
     
 tmp = -15
 for k in CONSTANT.keyboard_coor:
@@ -76,12 +79,12 @@ for k in CONSTANT.keyboard_coor:
         CONSTANT.BAR_X.append(tmp + 10)
         
 class Keyboard:
-    alpha = 128
     color = {
-        "RED": [255, 160, 122, alpha],
-        "BLUE": [4, 46, 255, alpha],
-        "BLACK": [0, 0, 0, alpha],
-        "WHITE": [255, 255, 255, alpha],
+        "RED": [255, 160, 122, CONSTANT.MATCH_KEYBOARD_ALPHA],
+        "BLUE": [4, 46, 255, CONSTANT.MATCH_KEYBOARD_ALPHA],
+        "BLACK": [0, 0, 0, CONSTANT.MATCH_KEYBOARD_ALPHA],
+        "WHITE": [255, 255, 255, CONSTANT.MATCH_KEYBOARD_ALPHA],
+        "GRAY": [128, 128, 128, CONSTANT.MATCH_KEYBOARD_ALPHA],
     }
 
     def __init__(self, x, y, color: str, kind: int):
@@ -96,7 +99,7 @@ class Keyboard:
         pygame.draw.rect(
             self.surf,
             self.color,
-            pygame.Rect(0, 0, self.surf.get_width(), self.surf.get_height()),
+            pygame.Rect(0, 0, self.surf.get_width(), self.surf.get_height())
         )
         CONSTANT.SCREEN.blit(self.surf, [self.x, self.y])
 
@@ -105,7 +108,7 @@ class Keyboard:
 
 class baseboard:
     alpha = 128
-    color = {"WHITE": [255, 255, 255, 128], "BLACK": [0, 0, 0, 220]}
+    color = {"WHITE": [255, 255, 255, CONSTANT.BASE_KEYBOARD_ALPHA], "BLACK": [0, 0, 0, CONSTANT.BASE_KEYBOARD_ALPHA]}
 
     def __init__(self):
         pass
@@ -148,9 +151,7 @@ class baseboard:
 
 
 def video(midi):
-    pygame.init()
-    # background = pygame.image.load("./universe.png")
-    
+    pygame.init()    
     pygame.display.set_caption("Test")
 
     # 게임 tick설정하는 부분
@@ -195,23 +196,21 @@ def video(midi):
                 key = Keyboard(
                     note[0],
                     note[1] + CONSTANT.BAR_Y,
-                    "WHITE" if note[2] == 15 else "BLACK",
+                    #"WHITE" if note[2] == 15 else "BLACK",
+                    "GRAY",
                     0 if note[2] == 15 else 1,
                 )
                 key.draw()
+            # 피아노 블록이 내려오는거 그려주기
             if note[1] < CONSTANT.SIZE[1] - CONSTANT.IMAGE_SIZE[1]:
                 surf = pygame.Surface((note[2], CONSTANT.BAR_Y), pygame.SRCALPHA)
                 pygame.draw.rect(
                     surf,
                     note[3] + [int((note[1] + 1) / (CONSTANT.SIZE[1] - CONSTANT.IMAGE_SIZE[1]) * 255)],
-                    # pygame.Rect(note[0], note[1], note[2], BAR_Y),
                     pygame.Rect(0, 0, note[2], CONSTANT.BAR_Y),
                     border_radius=1,
                 )
                 CONSTANT.SCREEN.blit(surf, (note[0], note[1]))
-                # pygame.draw.rect(
-                #     CONSTANT.SCREEN, note[3], pygame.Rect(note[0], note[1], note[2], CONSTANT.BAR_Y), border_radius=1
-                # )
                 note_list_on.append([note[0], note[1] + CONSTANT.REFRESH_GAP, note[2], note[3]])
 
         pygame.display.flip()
