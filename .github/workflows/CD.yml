@@ -2,7 +2,7 @@ name: "continuous deploy practice"
 on:
   push:
     branches:
-      - 'develop'
+      - 'main'
       
 jobs:
   ssh:
@@ -16,5 +16,5 @@ jobs:
           port: 2242
           script: |
             cd /opt/ml/level3_cv_finalproject-cv-08
-            git checkout develop
+            git checkout main
             git pull
