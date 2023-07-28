@@ -196,7 +196,6 @@ data/
 *.ipynb
 test.py
 *.mov
-*.png
 *.npy
 
 # audeo ignore
